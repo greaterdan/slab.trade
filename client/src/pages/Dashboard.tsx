@@ -51,7 +51,7 @@ export default function Dashboard() {
   const featuredMarket = markets[0];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

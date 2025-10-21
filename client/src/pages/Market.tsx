@@ -75,7 +75,7 @@ export default function Market() {
     : parseFloat(size || "0") * parseFloat(limitPrice || "0");
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4 py-4">
       {/* Header */}
       <motion.div
         className="flex items-center justify-between flex-wrap gap-4"

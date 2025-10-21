@@ -48,9 +48,7 @@ export default function App() {
         <div className="flex flex-col h-screen w-full">
           <TopBar />
           <main className="flex-1 overflow-auto">
-            <div className="container mx-auto max-w-[1440px] px-6 py-6">
-              <Router />
-            </div>
+            <Router />
           </main>
           <footer className="h-8 bg-card/80 backdrop-blur-sm border-t border-border flex items-center justify-center text-xs text-muted-foreground px-4">
             <p>
