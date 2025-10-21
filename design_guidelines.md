@@ -1,93 +1,88 @@
 # SLAB Design Guidelines
 
-## Color System (Solana-Branded Dark UI)
+## Color System (Warm Beige & White UI)
 
 **Core Neutrals**
-- Page Background: #131313
-- Surface: #171717
-- Elevated: #1B1B1B
-- Card Glass (alpha): rgba(255,255,255,0.03)
-- Borders/Hairlines: #252525
-- Divider Subtle: #1F1F1F
+- Page Background: #FAF8F5 (Soft warm white)
+- Surface: #FFFFFF (Pure white for cards)
+- Elevated: #F5F2ED (Subtle beige for hover states)
+- Borders/Hairlines: #E8E4DD (Soft beige borders)
+- Divider Subtle: #EBE8E2
 
 **Typography**
-- Primary: #FFFFFF
-- Secondary: #D7D7D7
-- Muted: #A9A9A9
-- Disabled: #6F6F6F
+- Primary: #1A1816 (Almost black, warm tone)
+- Secondary: #4A4542 (Dark gray)
+- Muted: #6B6662 (Medium gray)
+- Disabled: #9E9A95 (Light gray)
 
-**Solana Accents (Sparingly)**
-- Solana Purple: #9945FF
-- Solana Mint: #14F195
-- Solana Aqua: #00FFA3
-- Deep Space: #0A0F1E
-- Cosmic Indigo: #1C1B2E
+**Accent Colors (Warm palette)**
+- Primary Actions: #D97706 (Warm amber/orange)
+- Primary Hover: #B45309
+- Primary Pressed: #92400E
+- Secondary Interactive: #059669 (Teal green)
+- Secondary Hover: #047857
+- Tertiary Brand: #7C3AED (Purple accent)
+- Tertiary Hover: #6D28D9
 
 **Semantic Colors**
-- Primary Actions: #14F195 (hover #11D884, pressed #0FB978)
-- Secondary Interactive: #00FFA3 (hover #29FFB4, pressed #0FEA9A)
-- Tertiary Brand: #9945FF (hover #8A3DE6, pressed #7130C2)
-- Info: #37A6FF
-- Success: #1ED660
-- Warning: #F6C86E
-- Error/Urgency: #FF3B3B
-
-**Gradients**
-- Brand Sweep: linear-gradient(135deg, #9945FF 0%, #00FFA3 50%, #14F195 100%)
-- CTA Glow Ring: conic-gradient(from 180deg, #14F195, #00FFA3, #9945FF, #14F195)
-- Chart Line Accent: linear-gradient(180deg, #00FFA3 0%, rgba(0,255,163,0) 100%)
+- Info: #2563EB (Blue)
+- Success: #059669 (Green)
+- Warning: #F59E0B (Amber)
+- Error/Urgency: #DC2626 (Red)
 
 **Effects**
-- Soft Elevation: 0 8px 24px rgba(0,0,0,0.45)
-- Focus Ring: 0 0 0 2px rgba(20,241,149,0.35)
-- Card Hover Outline: 0 0 0 1px #2A2A2A
-- Backdrop: rgba(0,0,0,0.6)
-- Popover Surface: #161616 with border #2A2A2A
+- Soft Elevation: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)
+- Medium Elevation: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05)
+- Focus Ring: 0 0 0 3px rgba(217, 119, 6, 0.25)
+- Card Hover Outline: 0 0 0 1px #E8E4DD
+- Backdrop: rgba(0, 0, 0, 0.5)
+- Popover Surface: #FFFFFF with border #E8E4DD
 
 ## Layout System
 
 **Grid Structure**
 - Max Width: 1440px centered
-- 12-column grid with tight gutters
-- Fixed Left Rail: 80px with logo "SL" and vertical nav
+- 12-column grid with comfortable gutters
 - Top Bar: search, network pill, wallet connect, notifications
 - Responsive breakpoints: mobile (bottom sheet), tablet (condensed), desktop (full grid)
 
 ## Component Specifications
 
 **Button Styling**
-- Primary: bg #14F195, text #0B0B0B
-- Secondary: border #00FFA3, text #00FFA3, hover bg rgba(0,255,163,0.08)
-- Danger: bg #FF3B3B, text #0B0B0B (high-commit actions only)
-- Tabs/Active Pill: bg #171717, bottom bar #9945FF
+- Primary: bg #D97706 (amber), text #FFFFFF
+- Secondary: border #059669, text #059669, hover bg rgba(5, 150, 105, 0.1)
+- Ghost: transparent bg, hover bg #F5F2ED
+- Danger: bg #DC2626, text #FFFFFF (high-commit actions only)
+- Tabs/Active Pill: bg #F5F2ED, border-b #D97706
 
 **Navigation**
-- Active item: orange pill + subtle glow effect
-- Tooltips on hover for collapsed state
+- Active item: subtle background with accent border
 - Icons from lucide-react
+- Clean, minimal design
 
 **Cards & Surfaces**
-- Market tiles: elevated surface with status badges (Bonding/Warmup/Perps)
+- Market tiles: white cards with subtle shadows
+- Status badges (Bonding/Warmup/Perps) with semantic colors
 - Progress rings for graduation metrics
-- Mini-canvas placeholders for chart elements
-- Glass morphism for overlays
+- Clean borders and comfortable padding
+- Soft shadows for depth
 
 ## Page-Specific Layouts
 
 **Dashboard**
-- Featured Market card (8 cols): mini-candles, status badge, graduation progress, KPIs
-- Create Market card (4 cols): explainer + orange "Launch Market" CTA
-- Markets Table (full width): exchange-dense rows with symbol, status, %→graduation, 24h vol, OI, Trade/Buy split buttons
+- Featured Market card: clean white card with status badge, graduation progress, KPIs
+- Create Market card: explainer with amber "Launch Market" CTA
+- Markets Table: clean rows with symbol, status, %→graduation, 24h vol, OI, Trade/Buy buttons
 
 **Launch Wizard**
 - 5-step stepper: Basics → Bonding Curve → Graduation Triggers → Perps Params → Fees
 - Side-by-side layout: form left, live summary preview right
-- Red "Deploy" CTA (urgency), blue ghost secondary buttons
+- Amber "Deploy" CTA, secondary buttons
 - Real-time preview of market tile with status timeline
 
-**Market Detail (Hyperliquid-inspired)**
-- Left 8 cols: chart area with candles/TWAP toggle, tabs for Trades/Funding/Positions
-- Right 4 cols: Context-aware trading panel (Bonding/Warmup/Perps modes)
+**Market Detail**
+- Left area: chart with candles/TWAP toggle, tabs for Trades/Funding/Positions
+- Right area: Context-aware trading panel (Bonding/Warmup/Perps modes)
 - Optional middle column (xl screens): Order Book + Recent Trades
 - Bottom strip: Balances/Open Orders/TWAP/History tabs
 
@@ -100,38 +95,33 @@
 - Earnings breakdown from fees
 - Launched markets grid
 - Referral code generator
-- Payout history stub
+- Payout history
 
 ## Micro-Interactions
 
 **Timing & Motion**
 - Standard transitions: 150-200ms ease
 - Loading states: skeleton screens
-- Hover: subtle glow on interactive elements
-- Focus: mint green (#14F195) ring at 35% opacity
-
-**Keyboard Shortcuts**
-- Trading ticket: +/− for size, ←/→ for leverage, Enter to submit
-- Search: ⌘/Ctrl-K
-- Respect prefers-reduced-motion
+- Hover: subtle background color change on interactive elements
+- Focus: amber ring at 25% opacity
 
 **Feedback**
 - Toast notifications for transactions
-- Error lines in red
-- Risk/legal footer always visible
 - Clear validation states
+- Error messages in red
+- Success messages in green
 
 ## Typography Scale
 
-Use system fonts with tight tracking for numbers, slightly looser for text. Establish hierarchy through weight and color contrast rather than excessive size variation.
+Use modern sans-serif fonts (Inter, system fonts) with comfortable spacing. Establish hierarchy through weight and color contrast.
 
 ## Accessibility
 
-- WCAG AA contrast requirements
+- WCAG AA contrast requirements (black text on beige/white backgrounds)
 - ARIA labels on all interactive elements
 - Keyboard navigation throughout
 - Screen reader friendly status announcements
-- Mobile: collapsible rail, bottom sheet trading, dense list tables
+- Mobile: responsive design, touch-friendly targets
 
 ## Images
 
