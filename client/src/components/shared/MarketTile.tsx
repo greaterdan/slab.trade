@@ -34,7 +34,7 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
               {market.imageUrl ? (
                 <img src={market.imageUrl} alt={market.symbol} className="w-10 h-10 rounded-md" />
               ) : (
-                <div className="w-10 h-10 rounded-md bg-gradient-to-br from-solana-purple to-solana-mint flex items-center justify-center text-sm font-bold">
+                <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                   {market.symbol.slice(0, 2)}
                 </div>
               )}

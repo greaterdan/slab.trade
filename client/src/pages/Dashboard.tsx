@@ -143,8 +143,8 @@ export default function Dashboard() {
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           <Card className="p-6 border-primary/20 bg-card h-full flex flex-col">
-            <div className="w-12 h-12 bg-gradient-to-br from-solana-mint via-solana-aqua to-solana-purple flex items-center justify-center mb-4 border border-primary/30">
-              <Rocket className="w-5 h-5 text-black" />
+            <div className="w-12 h-12 bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 rounded-md">
+              <Rocket className="w-6 h-6 text-primary" />
             </div>
             <h3 className="text-base font-bold mb-2 text-primary">LAUNCH MARKET</h3>
             <p className="text-xs text-muted-foreground mb-6 flex-1">
@@ -195,7 +195,7 @@ export default function Dashboard() {
                   >
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 bg-gradient-to-br from-solana-purple to-solana-mint flex items-center justify-center text-[10px] font-bold border border-primary/30">
+                        <div className="w-6 h-6 bg-primary/10 border border-primary/20 rounded flex items-center justify-center text-[10px] font-bold text-primary">
                           {market.symbol.slice(0, 2)}
                         </div>
                         <span className="font-bold text-primary">{market.symbol}</span>

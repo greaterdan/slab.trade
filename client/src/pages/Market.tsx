@@ -87,7 +87,7 @@ export default function Market() {
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-solana-purple to-solana-mint flex items-center justify-center text-sm font-bold border border-primary/30">
+          <div className="w-10 h-10 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center text-sm font-bold text-primary">
             {symbol.slice(0, 2)}
           </div>
           <div>

@@ -234,7 +234,7 @@ export default function Creator() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.5 }}
       >
-        <Card className="p-6 border-card-border bg-gradient-to-br from-card to-primary/5">
+        <Card className="p-6 border-card-border bg-card">
           <h3 className="text-lg font-semibold mb-4">Referral Code</h3>
           <div className="flex gap-3">
             <Input

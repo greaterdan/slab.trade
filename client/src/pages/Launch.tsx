@@ -232,7 +232,7 @@ export default function Launch() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-solana-mint to-solana-purple bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold mb-2 text-foreground">
           Launch Your Market
         </h1>
         <p className="text-muted-foreground">
@@ -683,8 +683,8 @@ export default function Launch() {
 
             {formData.basics.symbol ? (
               <div className="space-y-4">
-                <div className="aspect-square w-full rounded-md bg-gradient-to-br from-solana-purple to-solana-mint flex items-center justify-center">
-                  <span className="text-4xl font-bold text-black">{formData.basics.symbol.slice(0, 2)}</span>
+                <div className="aspect-square w-full rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-primary">{formData.basics.symbol.slice(0, 2)}</span>
                 </div>
 
                 <div>
@@ -698,16 +698,16 @@ export default function Launch() {
                   <div>
                     <Badge variant="outline" className="mb-2">Status Timeline</Badge>
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex-1 h-1 bg-solana-purple rounded" />
-                      <span className="text-solana-purple">Bonding</span>
+                      <div className="flex-1 h-1 bg-warning rounded" />
+                      <span className="text-warning">Bonding</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs mt-1">
-                      <div className="flex-1 h-1 bg-solana-aqua rounded" />
-                      <span className="text-solana-aqua">Warmup</span>
+                      <div className="flex-1 h-1 bg-info rounded" />
+                      <span className="text-info">Warmup</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs mt-1">
-                      <div className="flex-1 h-1 bg-solana-mint rounded" />
-                      <span className="text-solana-mint">Perps</span>
+                      <div className="flex-1 h-1 bg-success rounded" />
+                      <span className="text-success">Perps</span>
                     </div>
                   </div>
 
