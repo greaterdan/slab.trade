@@ -174,13 +174,15 @@ export function TopBar() {
     <header className="h-14 bg-background border-b border-primary/20 flex items-center justify-between px-6 sticky top-0 z-40">
       {/* Left: Logo + Desktop Navigation */}
       <div className="flex items-center gap-6">
-        <div 
-          className="w-10 h-10 rounded-none bg-gradient-to-br from-solana-mint via-solana-aqua to-solana-purple flex items-center justify-center cursor-pointer flex-shrink-0 border border-primary/30"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => navigate("/")}
           data-testid="logo-home"
+          className="flex-shrink-0"
         >
-          <span className="text-sm font-bold text-black">SL</span>
-        </div>
+          <Rocket className="w-5 h-5 text-primary" />
+        </Button>
         
         {/* Desktop Horizontal Navigation */}
         <nav className="hidden lg:flex items-center gap-2">
