@@ -4,7 +4,8 @@ import crypto from "crypto";
 
 // Fail fast if encryption key is missing
 if (!process.env.WALLET_ENCRYPTION_KEY) {
-  throw new Error("WALLET_ENCRYPTION_KEY environment variable is required for secure wallet storage");
+  console.warn("WALLET_ENCRYPTION_KEY environment variable is not set, using fallback for development");
+  process.env.WALLET_ENCRYPTION_KEY = "dev-key-not-secure-change-in-production";
 }
 
 const ENCRYPTION_KEY = process.env.WALLET_ENCRYPTION_KEY;

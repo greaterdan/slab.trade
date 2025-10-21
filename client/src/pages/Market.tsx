@@ -6,19 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MiniCandleCanvas } from "@/components/shared/MiniCandleCanvas";
 import { OrderBook } from "@/components/shared/OrderBook";
 import { TradesFeed } from "@/components/shared/TradesFeed";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 import type { OrderBook as OrderBookType, Trade } from "@shared/schema";
 import { fetchMarketBySymbol, fetchOrderBook, fetchRecentTrades } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Market() {
   const [, params] = useRoute("/market/:symbol");
   const symbol = params?.symbol || "BONK";
+  const { user, isAuthenticated } = useAuth();
 
   const [chartMode, setChartMode] = useState<"candles" | "twap">("candles");
   const [activeTab, setActiveTab] = useState<"trades" | "funding" | "positions">("trades");
@@ -33,6 +36,11 @@ export default function Market() {
   const [limitPrice, setLimitPrice] = useState("");
   const [multiplier, setMultiplier] = useState([1]);
 
+  // Multi-wallet trading state
+  const [userWallets, setUserWallets] = useState<any[]>([]);
+  const [selectedWallets, setSelectedWallets] = useState<{[walletId: string]: {selected: boolean, solAmount: string}}>({});
+  const [showWalletSelection, setShowWalletSelection] = useState(false);
+
   useEffect(() => {
     const loadMarketData = async () => {
       const marketData = await fetchMarketBySymbol(symbol);
@@ -46,7 +54,28 @@ export default function Market() {
       }
     };
 
+    const loadUserWallets = async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await fetch("/api/wallets", { credentials: "include" });
+          if (response.ok) {
+            const wallets = await response.json();
+            setUserWallets(wallets);
+            // Initialize selected wallets state
+            const initialSelection: {[walletId: string]: {selected: boolean, solAmount: string}} = {};
+            wallets.forEach((wallet: any) => {
+              initialSelection[wallet.id] = { selected: false, solAmount: "0" };
+            });
+            setSelectedWallets(initialSelection);
+          }
+        } catch (error) {
+          console.error("Failed to load user wallets:", error);
+        }
+      }
+    };
+
     loadMarketData();
+    loadUserWallets();
 
     const interval = setInterval(async () => {
       if (market) {
@@ -56,7 +85,7 @@ export default function Market() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [symbol]);
+  }, [symbol, isAuthenticated]);
 
   if (!market || !orderBook) {
     return (
@@ -76,6 +105,37 @@ export default function Market() {
   const total = orderType === "market" 
     ? effectiveSize * market.metrics.currentPrice
     : effectiveSize * parseFloat(limitPrice || "0");
+
+  // Multi-wallet helper functions
+  const toggleWalletSelection = (walletId: string) => {
+    setSelectedWallets(prev => ({
+      ...prev,
+      [walletId]: {
+        ...prev[walletId],
+        selected: !prev[walletId].selected
+      }
+    }));
+  };
+
+  const updateWalletSolAmount = (walletId: string, amount: string) => {
+    setSelectedWallets(prev => ({
+      ...prev,
+      [walletId]: {
+        ...prev[walletId],
+        solAmount: amount
+      }
+    }));
+  };
+
+  const getTotalSelectedSol = () => {
+    return Object.values(selectedWallets)
+      .filter(w => w.selected)
+      .reduce((total, w) => total + parseFloat(w.solAmount || "0"), 0);
+  };
+
+  const getSelectedWalletsCount = () => {
+    return Object.values(selectedWallets).filter(w => w.selected).length;
+  };
 
   return (
     <div className="space-y-4 px-4 py-4">
@@ -325,6 +385,66 @@ export default function Market() {
                 </div>
               </div>
 
+              {/* Multi-Wallet Selection */}
+              {isAuthenticated && userWallets.length > 1 && (
+                <div className="space-y-3 pt-3 border-t border-primary/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-primary">WALLET SELECTION</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-6 px-2"
+                      onClick={() => setShowWalletSelection(!showWalletSelection)}
+                    >
+                      {showWalletSelection ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                      {showWalletSelection ? "HIDE" : "SELECT"}
+                    </Button>
+                  </div>
+
+                  {showWalletSelection && (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {userWallets.map((wallet) => (
+                        <div key={wallet.id} className="flex items-center gap-2 p-2 bg-background/50 border border-primary/10 rounded">
+                          <Checkbox
+                            checked={selectedWallets[wallet.id]?.selected || false}
+                            onCheckedChange={() => toggleWalletSelection(wallet.id)}
+                            className="w-3 h-3"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-mono text-primary truncate">
+                              {wallet.name} ({wallet.publicKey.slice(0, 8)}...)
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Balance: {parseFloat(wallet.balance || "0").toFixed(4)} SOL
+                            </div>
+                          </div>
+                          {selectedWallets[wallet.id]?.selected && (
+                            <div className="w-20">
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                value={selectedWallets[wallet.id]?.solAmount || ""}
+                                onChange={(e) => updateWalletSolAmount(wallet.id, e.target.value)}
+                                className="text-xs h-6"
+                                step="0.01"
+                                min="0"
+                                max={wallet.balance}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {getSelectedWalletsCount() > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      Selected: {getSelectedWalletsCount()} wallet(s) | Total SOL: {getTotalSelectedSol().toFixed(4)}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Submit Button */}
               <motion.div whileTap={{ scale: 0.98 }}>
                 <Button
@@ -334,15 +454,23 @@ export default function Market() {
                       ? "border-primary/30 text-primary hover:bg-primary/10" 
                       : "border-destructive/30 text-destructive hover:bg-destructive/10"
                   }`}
-                  disabled={!size || parseFloat(size) <= 0 || (orderType === "limit" && !limitPrice)}
+                  disabled={!size || parseFloat(size) <= 0 || (orderType === "limit" && !limitPrice) || (getSelectedWalletsCount() > 0 && getTotalSelectedSol() <= 0)}
                   data-testid="button-trade-submit"
                 >
-                  [{orderType.toUpperCase()}_{side.toUpperCase()}]
+                  {getSelectedWalletsCount() > 0 
+                    ? `[${orderType.toUpperCase()}_${side.toUpperCase()}_${getSelectedWalletsCount()}W]`
+                    : `[${orderType.toUpperCase()}_${side.toUpperCase()}]`
+                  }
                 </Button>
               </motion.div>
 
               <div className="text-[9px] text-center text-muted-foreground">
-                &gt; CONNECT_WALLET_TO_TRADE
+                {isAuthenticated 
+                  ? (getSelectedWalletsCount() > 0 
+                      ? `> READY_TO_TRADE_WITH_${getSelectedWalletsCount()}_WALLETS`
+                      : "> SELECT_WALLETS_TO_TRADE")
+                  : "> CONNECT_WALLET_TO_TRADE"
+                }
               </div>
             </div>
           </Card>

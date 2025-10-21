@@ -20,12 +20,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { LoginModal } from "@/components/auth/LoginModal";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: Rocket, label: "Launch", path: "/launch" },
   { icon: Compass, label: "Discover", path: "/discover" },
-  { icon: TrendingUp, label: "Markets", path: "/markets" },
   { icon: Wallet, label: "Portfolio", path: "/portfolio" },
   { icon: User, label: "Creator", path: "/creator" },
   { icon: FileText, label: "Docs", path: "/docs" },
@@ -37,6 +37,7 @@ export function TopBar() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("deposit");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
@@ -174,15 +175,12 @@ export function TopBar() {
     <header className="h-14 bg-background border-b border-primary/20 flex items-center justify-between px-6 sticky top-0 z-40">
       {/* Left: Logo + Desktop Navigation */}
       <div className="flex items-center gap-6">
-        <Button
-          variant="ghost"
-          size="icon"
+        <img 
+          src="/slablogo.png" 
+          alt="SLAB Logo" 
+          className="w-16 h-16 cursor-pointer" 
           onClick={() => navigate("/")}
-          data-testid="logo-home"
-          className="flex-shrink-0"
-        >
-          <Rocket className="w-5 h-5 text-primary" />
-        </Button>
+        />
         
         {/* Desktop Horizontal Navigation */}
         <nav className="hidden lg:flex items-center gap-2">
@@ -282,7 +280,7 @@ export function TopBar() {
             variant="outline"
             size="sm"
             className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => setLoginModalOpen(true)}
             data-testid="button-login"
           >
             <User className="w-3.5 h-3.5" />
@@ -312,8 +310,27 @@ export function TopBar() {
               {/* Wallet Address */}
               <div className="px-2 py-2 space-y-1">
                 <div className="text-xs text-muted-foreground">Address</div>
-                <div className="text-xs font-mono text-primary" data-testid="text-wallet-address">
-                  {user?.wallet?.publicKey || "Loading..."}
+                <div className="flex items-center gap-2">
+                  <div className="text-xs font-mono text-primary break-all" data-testid="text-wallet-address">
+                    {user?.wallet?.publicKey || "Loading..."}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 flex-shrink-0"
+                    onClick={() => {
+                      if (user?.wallet?.publicKey) {
+                        navigator.clipboard.writeText(user.wallet.publicKey);
+                        toast({
+                          title: "Address Copied",
+                          description: "Wallet address copied to clipboard",
+                        });
+                      }
+                    }}
+                    data-testid="button-copy-address"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
                 </div>
               </div>
 
@@ -505,6 +522,12 @@ export function TopBar() {
           </Tabs>
         </DialogContent>
       </Dialog>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={loginModalOpen} 
+        onClose={() => setLoginModalOpen(false)} 
+      />
     </header>
   );
 }

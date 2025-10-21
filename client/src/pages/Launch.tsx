@@ -233,10 +233,10 @@ export default function Launch() {
         transition={{ duration: 0.3 }}
       >
         <h1 className="text-3xl font-bold mb-2 text-foreground">
-          Launch Your Market
+          Launch Slab
         </h1>
         <p className="text-muted-foreground">
-          Create a perpetual market with custom bonding curve and parameters
+          Create perpetual market with custom bonding curve
         </p>
       </motion.div>
 

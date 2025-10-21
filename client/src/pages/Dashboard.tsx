@@ -144,9 +144,9 @@ export default function Dashboard() {
         >
           <Card className="p-6 border-primary/20 bg-card h-full flex flex-col">
             <div className="w-12 h-12 bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 rounded-md">
-              <Rocket className="w-6 h-6 text-primary" />
+              <img src="/slablogo.png" alt="SLAB Logo" className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold mb-2 text-primary">LAUNCH MARKET</h3>
+            <h3 className="text-base font-bold mb-2 text-primary">LAUNCH SLAB</h3>
             <p className="text-xs text-muted-foreground mb-6 flex-1">
               &gt; Create perpetual market with custom bonding curve
               <br />

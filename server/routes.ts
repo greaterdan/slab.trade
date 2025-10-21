@@ -20,7 +20,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(null);
       }
 
-      const userId = req.user.claims.sub;
+      // Handle both development and production user objects
+      const userId = req.user.claims?.sub || req.user.id || req.user.claims?.sub;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -50,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get wallet balance from blockchain
   app.get("/api/wallet/balance", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const wallet = await storage.getUserWallet(userId);
       
       if (!wallet) {
@@ -75,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export private key (IMPORTANT: User must be authenticated)
   app.get("/api/wallet/export-key", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const wallet = await storage.getUserWallet(userId);
       
       if (!wallet) {
@@ -95,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create wallet (in case user wants to regenerate)
   app.post("/api/wallet/create", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       
       // Check if wallet already exists
       const existingWallet = await storage.getUserWallet(userId);
@@ -119,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Withdraw SOL from custodial wallet
   app.post("/api/wallet/withdraw", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const { recipientAddress, amount } = req.body;
 
       // Validate inputs
@@ -206,7 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // List all wallets for authenticated user
   app.get("/api/wallets", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const allWallets = await storage.getAllUserWallets(userId);
       
       // Don't expose encrypted private keys in list view
@@ -230,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create additional wallet for authenticated user
   app.post("/api/wallets", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const { name } = req.body;
 
       if (!name || typeof name !== "string" || name.length === 0) {
@@ -268,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update wallet (rename or archive)
   app.patch("/api/wallets/:walletId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const { walletId } = req.params;
       const { name, isArchived } = req.body;
 
@@ -300,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Refresh specific wallet balance from blockchain
   app.get("/api/wallets/:walletId/balance", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const { walletId } = req.params;
 
       const wallet = await storage.getWalletById(walletId);
@@ -330,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export private key for a specific wallet
   app.get("/api/wallets/:walletId/export-key", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const { walletId } = req.params;
 
       const wallet = await storage.getWalletById(walletId);
