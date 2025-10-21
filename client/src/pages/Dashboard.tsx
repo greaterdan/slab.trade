@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { KPIStat } from "@/components/shared/KPIStat";
 import { ProgressRing } from "@/components/shared/ProgressRing";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-import { Rocket, TrendingUp, Users, Droplet, Clock, ArrowRight } from "lucide-react";
+import { Rocket, TrendingUp, Users, Droplet, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useMarketsStore } from "@/stores/useMarketsStore";
@@ -57,11 +57,11 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-solana-mint via-solana-aqua to-solana-purple bg-clip-text text-transparent">
-          Welcome to SLAB
+        <h1 className="text-2xl font-bold mb-2 text-primary">
+          $ SLAB/TERMINAL
         </h1>
-        <p className="text-muted-foreground">
-          Launch perpetual markets with bonding curves. Trade, create, discover.
+        <p className="text-muted-foreground text-sm">
+          &gt; LAUNCH PERPETUAL MARKETS WITH BONDING CURVES
         </p>
       </motion.div>
 
@@ -72,11 +72,11 @@ export default function Dashboard() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <Card className="p-6 border-card-border bg-card">
+          <Card className="p-6 border-primary/20 bg-card">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold mb-1">{featuredMarket.symbol}</h2>
-                <p className="text-sm text-muted-foreground">{featuredMarket.name}</p>
+                <h2 className="text-xl font-bold mb-1 text-primary">{featuredMarket.symbol}</h2>
+                <p className="text-xs text-muted-foreground">{featuredMarket.name}</p>
               </div>
               <StatusBadge status={featuredMarket.status} />
             </div>
@@ -86,39 +86,39 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
               <KPIStat
                 icon={Droplet}
-                label="Liquidity"
+                label="LIQUIDITY"
                 value={`$${(featuredMarket.metrics.liquidity / 1e6).toFixed(2)}M`}
                 trend="up"
               />
               <KPIStat
                 icon={Users}
-                label="Holders"
+                label="HOLDERS"
                 value={featuredMarket.metrics.holders}
                 trend="up"
               />
               <KPIStat
                 icon={Clock}
-                label="Age"
+                label="AGE"
                 value={`${featuredMarket.metrics.ageHours}h`}
                 trend="neutral"
               />
               <KPIStat
                 icon={TrendingUp}
-                label="24h Change"
+                label="24H CHG"
                 value={`${featuredMarket.metrics.priceChange24h > 0 ? "+" : ""}${featuredMarket.metrics.priceChange24h.toFixed(2)}%`}
                 trend={featuredMarket.metrics.priceChange24h >= 0 ? "up" : "down"}
               />
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-muted/10 rounded-md border border-border">
+            <div className="flex items-center justify-between p-4 bg-background/50 border border-primary/20">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Graduation Progress</span>
-                  <span className="text-sm font-bold text-primary">{featuredMarket.metrics.graduationProgress}%</span>
+                  <span className="text-xs font-medium text-muted-foreground">GRADUATION PROGRESS</span>
+                  <span className="text-xs font-bold text-primary">{featuredMarket.metrics.graduationProgress}%</span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-1 bg-muted/20 border border-primary/20 overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-solana-purple via-solana-aqua to-solana-mint"
+                    className="h-full bg-primary"
                     initial={{ width: 0 }}
                     animate={{ width: `${featuredMarket.metrics.graduationProgress}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
@@ -129,9 +129,8 @@ export default function Dashboard() {
             </div>
 
             <Link href={`/market/${featuredMarket.symbol}`}>
-              <Button className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-view-market">
-                View Market
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <Button className="w-full mt-4 border-primary/30 bg-transparent text-primary hover:bg-primary/10" variant="outline" data-testid="button-view-market">
+                [VIEW MARKET]
               </Button>
             </Link>
           </Card>
@@ -143,18 +142,19 @@ export default function Dashboard() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <Card className="p-6 border-card-border bg-gradient-to-br from-card via-card to-accent/5 h-full flex flex-col">
-            <div className="w-12 h-12 rounded-md bg-gradient-to-br from-solana-mint to-solana-purple flex items-center justify-center mb-4">
-              <Rocket className="w-6 h-6 text-black" />
+          <Card className="p-6 border-primary/20 bg-card h-full flex flex-col">
+            <div className="w-12 h-12 bg-gradient-to-br from-solana-mint via-solana-aqua to-solana-purple flex items-center justify-center mb-4 border border-primary/30">
+              <Rocket className="w-5 h-5 text-black" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Launch Your Market</h3>
-            <p className="text-sm text-muted-foreground mb-6 flex-1">
-              Create a perpetual market with a custom bonding curve. Earn fees from every trade and graduation.
+            <h3 className="text-base font-bold mb-2 text-primary">LAUNCH MARKET</h3>
+            <p className="text-xs text-muted-foreground mb-6 flex-1">
+              &gt; Create perpetual market with custom bonding curve
+              <br />
+              &gt; Earn fees from trades and graduation
             </p>
             <Link href="/launch">
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-launch-market">
-                Launch Market
-                <Rocket className="w-4 h-4 ml-2" />
+              <Button className="w-full border-primary/30 bg-transparent text-primary hover:bg-primary/10" variant="outline" data-testid="button-launch-market">
+                [LAUNCH]
               </Button>
             </Link>
           </Card>
@@ -166,28 +166,28 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.3 }}
       >
-        <Card className="border-card-border bg-card overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-lg font-semibold">All Markets</h2>
+        <Card className="border-primary/20 bg-card overflow-hidden">
+          <div className="p-4 border-b border-primary/20">
+            <h2 className="text-sm font-bold text-primary">ALL_MARKETS.DB</h2>
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full font-mono text-xs">
               <thead>
-                <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wide">
-                  <th className="text-left p-3 font-medium">Market</th>
-                  <th className="text-left p-3 font-medium">Status</th>
-                  <th className="text-right p-3 font-medium">→Graduation</th>
-                  <th className="text-right p-3 font-medium">24h Vol</th>
-                  <th className="text-right p-3 font-medium">OI</th>
-                  <th className="text-right p-3 font-medium">Action</th>
+                <tr className="border-b border-primary/20 text-muted-foreground">
+                  <th className="text-left p-3 font-medium">MARKET</th>
+                  <th className="text-left p-3 font-medium">STATUS</th>
+                  <th className="text-right p-3 font-medium">GRAD%</th>
+                  <th className="text-right p-3 font-medium">24H_VOL</th>
+                  <th className="text-right p-3 font-medium">OPEN_INT</th>
+                  <th className="text-right p-3 font-medium">ACTION</th>
                 </tr>
               </thead>
               <tbody>
                 {markets.map((market, index) => (
                   <motion.tr
                     key={market.id}
-                    className="border-b border-border/50 last:border-0 hover-elevate"
+                    className="border-b border-primary/10 last:border-0 hover:bg-primary/5"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
@@ -195,10 +195,10 @@ export default function Dashboard() {
                   >
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-md bg-gradient-to-br from-solana-purple to-solana-mint flex items-center justify-center text-xs font-bold">
+                        <div className="w-6 h-6 bg-gradient-to-br from-solana-purple to-solana-mint flex items-center justify-center text-[10px] font-bold border border-primary/30">
                           {market.symbol.slice(0, 2)}
                         </div>
-                        <span className="font-semibold">{market.symbol}</span>
+                        <span className="font-bold text-primary">{market.symbol}</span>
                       </div>
                     </td>
                     <td className="p-3">
@@ -206,25 +206,25 @@ export default function Dashboard() {
                     </td>
                     <td className="p-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className="w-12 h-1 bg-background border border-primary/20 overflow-hidden">
                           <div
                             className="h-full bg-primary"
                             style={{ width: `${market.metrics.graduationProgress}%` }}
                           />
                         </div>
-                        <span className="font-mono text-sm" data-numeric="true">{market.metrics.graduationProgress}%</span>
+                        <span className="font-mono text-xs text-muted-foreground" data-numeric="true">{market.metrics.graduationProgress}%</span>
                       </div>
                     </td>
-                    <td className="p-3 text-right font-mono" data-numeric="true">
+                    <td className="p-3 text-right font-mono text-muted-foreground" data-numeric="true">
                       ${(market.metrics.volume24h / 1e3).toFixed(0)}K
                     </td>
-                    <td className="p-3 text-right font-mono" data-numeric="true">
+                    <td className="p-3 text-right font-mono text-muted-foreground" data-numeric="true">
                       ${(market.metrics.openInterest / 1e3).toFixed(0)}K
                     </td>
                     <td className="p-3 text-right">
                       <Link href={`/market/${market.symbol}`}>
-                        <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10" data-testid={`button-trade-${market.symbol}`}>
-                          {market.status === "bonding" ? "Buy" : "Trade"}
+                        <Button variant="ghost" size="sm" className="border border-primary/20 text-primary hover:bg-primary/10 text-[10px]" data-testid={`button-trade-${market.symbol}`}>
+                          {market.status === "bonding" ? "[BUY]" : "[TRADE]"}
                         </Button>
                       </Link>
                     </td>
