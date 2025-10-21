@@ -233,6 +233,23 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### October 21, 2025 - Percolator SDK Integration & On-Chain Market Creation
+- **Built comprehensive TypeScript Percolator SDK** with 6 core modules:
+  - `types.ts`: Fixed-point math (6 decimals), enums, RiskParams, WarmupConfig, data structures
+  - `connection.ts`: Solana RPC connection, priority fee estimation, confirmation helpers
+  - `pdas.ts`: PDA derivation for vault, escrow, cap, portfolio, slab, hold, position accounts
+  - `router.ts`: Transaction builders for createMarket, mintCap, settleFunding, freeze/unfreeze
+  - `slab.ts`: Transaction builders for initSlab, addInstrument, reserve, commit, cancel, batchOpen, liquidate
+  - `flows.ts`: High-level operations (placePerpOrder flow, warmup guards, margin calculations)
+- **Wired Launch page to real on-chain deployment**:
+  - deployMarket() handler creates market ID, builds RiskParams and WarmupConfig from form
+  - Prepares transactions for initSlab (10MB account), createMarket (router), addInstrument (slab)
+  - Shows loading states and toast notifications
+  - Transaction signing TODO (requires custodial wallet integration)
+- **Configuration**: `.env.local` with mainnet Router/Slab program IDs and RPC endpoints
+- **Architecture Decision**: Using deployed Percolator programs instead of building from source (Replit constraints)
+- **Status**: Transaction structures verified by architect, serialization awaiting Percolator IDL documentation
+
 ### October 21, 2025 - Authentication & Custodial Wallet System
 - Implemented Replit Auth for multi-provider login (Google, GitHub, X, Apple, email/password)
 - Created PostgreSQL database with users, sessions, and wallets tables
