@@ -12,9 +12,9 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-**Technology Stack:** React 18 (TypeScript), Vite, Wouter (routing), TanStack Query (server state), Zustand (client state), Framer Motion, Tailwind CSS (Solana-branded dark theme).
+**Technology Stack:** React 18 (TypeScript), Vite, Wouter (routing), TanStack Query (server state), Zustand (client state), Framer Motion, Tailwind CSS (warm beige & white theme).
 
-**UI Component System:** `shadcn/ui` (Radix UI primitives) with a custom design system based on Solana brand colors (purple, mint, aqua) and a dark-first UI.
+**UI Component System:** `shadcn/ui` (Radix UI primitives) with warm beige & white design system featuring black text, light backgrounds (#FAF8F5, #FFFFFF), and warm accent colors (amber #D97706, teal #059669, purple #7C3AED).
 
 **State Management:** Three primary Zustand stores (`useMarketsStore`, `useLaunchStore`, `useTradeStore`) for domain-specific client-side state, complemented by React Query for server-side data fetching and caching.
 
@@ -48,7 +48,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Styling and Theming
 
-**Color System:** Dark theme with Solana brand colors (Mint, Aqua, Purple) for primary/secondary actions and accents, and semantic colors for status indicators.
+**Color System:** Light beige/white theme with warm backgrounds (#FAF8F5, #FFFFFF), black text (#1A1816), and warm accent colors (amber, teal, purple) for actions and status indicators.
 
 **Tailwind Configuration:** Custom properties for theme colors, border radii, and elevation utilities.
 
@@ -90,3 +90,16 @@ Preferred communication style: Simple, everyday language.
 
 ### Platform Integration
 - **Replit Vite Plugins**
+
+## Recent Changes
+
+### October 21, 2025 - Color Scheme Redesign
+- Complete visual redesign from dark terminal theme to warm beige/white aesthetic
+- Updated color palette:
+  - Backgrounds: Soft warm white (#FAF8F5), pure white cards (#FFFFFF)
+  - Text: Almost black (#1A1816) with excellent contrast for accessibility
+  - Accent colors: Warm amber (#D97706), teal green (#059669), purple (#7C3AED)
+- Updated design_guidelines.md with new color system specifications
+- Replaced all CSS variables in index.css with light theme values
+- Verified WCAG AA contrast standards (11:1 for primary text)
+- All pages tested and confirmed working with new color scheme
