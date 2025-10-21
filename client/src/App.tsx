@@ -9,6 +9,7 @@ import Launch from "@/pages/Launch";
 import Market from "@/pages/Market";
 import Discover from "@/pages/Discover";
 import Creator from "@/pages/Creator";
+import Portfolio from "@/pages/Portfolio";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/market/:symbol" component={Market} />
       <Route path="/discover" component={Discover} />
       <Route path="/creator" component={Creator} />
+      <Route path="/portfolio" component={Portfolio} />
       <Route path="/markets" component={Discover} />
       <Route path="/docs">
         {() => (

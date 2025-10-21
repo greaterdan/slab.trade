@@ -26,6 +26,7 @@ const navItems = [
   { icon: Rocket, label: "Launch", path: "/launch" },
   { icon: Compass, label: "Discover", path: "/discover" },
   { icon: TrendingUp, label: "Markets", path: "/markets" },
+  { icon: Wallet, label: "Portfolio", path: "/portfolio" },
   { icon: User, label: "Creator", path: "/creator" },
   { icon: FileText, label: "Docs", path: "/docs" },
 ];
