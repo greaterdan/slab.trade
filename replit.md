@@ -48,19 +48,33 @@ Preferred communication style: Simple, everyday language.
 **Server Framework:**
 - Express.js with TypeScript
 - Custom Vite middleware integration for development
-- Minimal API surface - currently uses mock data (in-memory storage)
+- PostgreSQL database with Drizzle ORM for data persistence
 - RESTful API design pattern (routes prefixed with `/api`)
+
+**Authentication & Authorization:**
+- **Replit Auth Integration**: OAuth-based authentication supporting Google, GitHub, X (Twitter), Apple, and email/password login
+- **Session Management**: Express sessions backed by PostgreSQL (`connect-pg-simple`)
+- **Protected Routes**: Launch and Creator pages require authentication
+- **Auth Flow**: Unauthenticated users see `null` from `/api/auth/user` (200 response), authenticated users receive user object with wallet info
+- **Security**: SESSION_SECRET environment variable required for session encryption
+
+**Custodial Wallet System:**
+- **Auto-Generation**: Each user automatically receives a Solana wallet on first login
+- **Encryption**: Private keys encrypted using AES-256-CBC with WALLET_ENCRYPTION_KEY environment variable
+- **Storage**: Wallets table stores encrypted private key, public key, and SOL balance for each user
+- **Export**: Users can export their private key via secure clipboard copy (requires HTTPS)
+- **Balance Tracking**: Wallet balances fetched from Solana blockchain (devnet) and cached in database
 
 **Development vs Production:**
 - Development: Vite dev server with HMR, middleware mode
 - Production: Pre-built static assets served by Express
 - Replit-specific plugins for development environment integration
 
-**Storage Interface:**
-- Abstract `IStorage` interface defining CRUD operations
-- Current implementation: `MemStorage` (in-memory Map-based storage)
-- Designed for easy migration to database backend (Drizzle ORM + PostgreSQL ready)
-- User model defined but not currently utilized by the application
+**Storage Architecture:**
+- **Database**: PostgreSQL via `@neondatabase/serverless` (Neon serverless driver)
+- **ORM**: Drizzle ORM with TypeScript-first schema definitions
+- **Storage Interface**: `IStorage` interface with `DbStorage` implementation for database operations
+- **Tables**: users (auth data), sessions (Express sessions), wallets (encrypted Solana keypairs)
 
 ### Data Layer Design
 
@@ -80,12 +94,23 @@ Preferred communication style: Simple, everyday language.
 - Realistic order book and trade data generation
 - Real-time updates simulated via intervals and random price movements
 
-**Drizzle ORM Configuration:**
-- Configured for PostgreSQL via `@neondatabase/serverless`
+**Database Schema:**
+- **users table**: Stores user authentication data (id, email, name, profile picture from OAuth provider)
+- **sessions table**: Express session storage managed by `connect-pg-simple`
+- **wallets table**: Custodial Solana wallets with encrypted private keys
+  - userId: Foreign key to users table
+  - publicKey: Solana public key (base58 encoded)
+  - encryptedPrivateKey: AES-256-CBC encrypted private key
+  - balance: Cached SOL balance from blockchain
 - Schema file: `shared/schema.ts`
-- Migration directory: `./migrations`
-- Database push script available: `npm run db:push`
-- Currently not connected - prepared for future backend integration
+- Database push script: `npm run db:push` (or `npm run db:push --force` for schema changes)
+
+**API Endpoints:**
+- `GET /api/auth/user`: Returns current user with wallet info (or null if not authenticated)
+- `GET /api/login`: Redirects to Replit Auth OAuth flow
+- `GET /api/logout`: Ends session and redirects to home
+- `GET /api/wallet/balance`: Fetches fresh balance from Solana blockchain
+- `GET /api/wallet/export-key`: Returns decrypted private key for authenticated user
 
 ### Trading Interface Components
 
@@ -150,11 +175,16 @@ Preferred communication style: Simple, everyday language.
 - **esbuild**: Fast JavaScript/TypeScript bundler for server code
 - **tsx**: TypeScript execution for development server
 
-### Backend & Database (Configured, Not Active)
-- **Drizzle ORM**: TypeScript ORM for SQL databases
-- **@neondatabase/serverless**: Serverless PostgreSQL driver
-- **connect-pg-simple**: PostgreSQL session store for Express
+### Backend & Database
+- **Drizzle ORM**: TypeScript ORM for SQL databases (actively used)
+- **@neondatabase/serverless**: Serverless PostgreSQL driver (actively used)
+- **connect-pg-simple**: PostgreSQL session store for Express (actively used)
 - **drizzle-zod**: Automatic Zod schema generation from Drizzle schemas
+
+### Blockchain & Wallet
+- **@solana/web3.js**: Solana JavaScript SDK for wallet generation and blockchain interaction
+- **bs58**: Base58 encoding/decoding for Solana addresses and private keys
+- **Node crypto**: AES-256-CBC encryption for custodial wallet private keys
 
 ### Utility Libraries
 - **date-fns**: Date manipulation and formatting
@@ -186,5 +216,30 @@ Preferred communication style: Simple, everyday language.
 **Database Strategy:**
 - Drizzle ORM chosen for TypeScript-first approach and type safety
 - PostgreSQL via Neon for serverless deployment compatibility
-- Schema-first design allows frontend development while backend evolves
-- Migration system ready for when database is provisioned
+- Schema-first design with Drizzle's push-based migrations (no manual SQL)
+- Database actively stores users, sessions, and encrypted wallet data
+
+**Authentication Strategy:**
+- Replit Auth chosen for seamless multi-provider OAuth (Google, GitHub, X, Apple, email)
+- No manual credential management - delegated to Replit's auth infrastructure
+- Automatic session management with PostgreSQL-backed sessions
+- Protected routes use `useAuth` hook for client-side redirects
+
+**Wallet Strategy:**
+- Custodial wallets for ease of use - no browser wallet extensions required
+- Users can export private keys to migrate to non-custodial wallets
+- Encryption ensures private keys are never stored in plaintext
+- Automatic wallet creation on first login eliminates friction
+
+## Recent Changes
+
+### October 21, 2025 - Authentication & Custodial Wallet System
+- Implemented Replit Auth for multi-provider login (Google, GitHub, X, Apple, email/password)
+- Created PostgreSQL database with users, sessions, and wallets tables
+- Built custodial wallet service with AES-256-CBC encrypted private key storage
+- Auto-generate Solana keypair for each user on first login
+- Protected Launch and Creator pages to require authentication
+- Updated TopBar with Login/Logout buttons and wallet address display
+- Added wallet balance display and private key export functionality
+- Implemented secure authentication flow: unauthenticated users see null, authenticated users get wallet auto-created
+- Security: WALLET_ENCRYPTION_KEY required (fails hard if missing), private keys never stored in plaintext
