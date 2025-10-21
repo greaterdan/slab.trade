@@ -25,6 +25,17 @@ import type {
   Side,
 } from "./types";
 import { toFixed } from "./types";
+import { connection } from "./connection";
+
+/**
+ * IMPORTANT: All transaction builders return unsigned transactions with
+ * placeholder serialization. Actual parameter serialization requires the
+ * Percolator program IDL or layout documentation.
+ * 
+ * Current status: Stubs for transaction structure only.
+ * TODO: Replace placeholder buffers with proper borsh/bincode serialization
+ * matching the deployed Percolator programs.
+ */
 
 // Instruction discriminators (to be finalized based on actual program)
 const DISCRIMINATORS = {
@@ -41,6 +52,10 @@ const DISCRIMINATORS = {
 
 /**
  * Initialize a new slab (10MB account for orderbook)
+ * 
+ * NOTE: The PDA account creation is handled by the program using invoke_signed.
+ * Client cannot create PDA accounts with SystemProgram.createAccount since
+ * PDAs don't have private keys to sign transactions.
  */
 export async function initSlab(
   marketId: PublicKey,
@@ -51,29 +66,25 @@ export async function initSlab(
 ): Promise<Transaction> {
   const tx = new Transaction();
 
-  // Find slab state PDA
+  // Find slab state PDA (program will create this account)
   const [slabState] = findSlabStatePda(marketId);
   const [slabAuthority] = findSlabAuthorityPda(slabState);
 
-  // Allocate 10MB for slab account
-  const SLAB_SIZE = 10 * 1024 * 1024; // 10 MB
-  const lamports = await connection.getMinimumBalanceForRentExemption(SLAB_SIZE);
-
-  // Create account instruction
-  const createIx = SystemProgram.createAccount({
-    fromPubkey: payer,
-    newAccountPubkey: slabState,
-    lamports,
-    space: SLAB_SIZE,
-    programId: SLAB_PROGRAM_ID,
-  });
-
-  // TODO: Serialize risk params and config
+  // TODO: Serialize risk params and config based on actual Percolator program layout
+  // Awaiting IDL/program documentation for proper serialization format
   const data = Buffer.alloc(512);
   data.writeUInt8(DISCRIMINATORS.INIT_SLAB, 0);
-  // Add risk params serialization...
+  // Serialization format:
+  // - authority (32 bytes)
+  // - initial_margin_bps (2 bytes)
+  // - maintenance_margin_bps (2 bytes)
+  // - band_bps (2 bytes)
+  // - funding_cap_bps (2 bytes)
+  // - max_leverage (1 byte)
+  // - open_interest_cap (8 bytes)
+  // - anti_toxicity flag (1 byte)
 
-  const initIx = new TransactionInstruction({
+  const ix = new TransactionInstruction({
     programId: SLAB_PROGRAM_ID,
     keys: [
       { pubkey: payer, isSigner: true, isWritable: true },
@@ -87,7 +98,7 @@ export async function initSlab(
     data,
   });
 
-  tx.add(createIx, initIx);
+  tx.add(ix);
 
   return tx;
 }
@@ -357,6 +368,3 @@ export async function liquidate(
 
   return tx;
 }
-
-// Re-export connection for convenience
-import { connection } from "./connection";

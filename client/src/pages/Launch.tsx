@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PublicKey, Keypair } from "@solana/web3.js";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, ChevronRight, Check, Rocket } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Rocket, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MarketTile } from "@/components/shared/MarketTile";
 import type { LaunchFormData, BondingCurveType } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import * as percolator from "@/percolator";
+import type { RiskParams, InstrumentConfig } from "@/percolator/types";
 
 const steps = [
   { number: 1, title: "Basics", subtitle: "Name, symbol, image" },
@@ -23,8 +26,9 @@ const steps = [
 
 export default function Launch() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isDeploying, setIsDeploying] = useState(false);
   const [formData, setFormData] = useState<LaunchFormData>({
     step: 1,
     basics: { name: "", symbol: "", imageUrl: "" },
@@ -35,12 +39,131 @@ export default function Launch() {
   });
 
   const updateFormData = (section: keyof LaunchFormData, data: any) => {
-    setFormData(prev => ({ ...prev, [section]: { ...prev[section], ...data } }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [section]: { ...(prev[section] as object), ...data } 
+    }));
   };
 
   const canProceed = () => {
     if (currentStep === 1) return formData.basics.name && formData.basics.symbol;
     return true;
+  };
+
+  const deployMarket = async () => {
+    if (!user?.wallet?.publicKey) {
+      toast({
+        title: "Wallet Not Found",
+        description: "Please ensure you have a wallet connected",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDeploying(true);
+
+    try {
+      // Generate new market ID
+      const marketKeypair = Keypair.generate();
+      const marketId = marketKeypair.publicKey;
+      
+      const userPubkey = new PublicKey(user.wallet.publicKey);
+      
+      // USDC mint (mainnet) - TODO: Make configurable
+      const quoteMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
+      // Build risk parameters from form
+      const risk: RiskParams = {
+        initialMarginBps: Math.floor(formData.perpsParams.initialMargin * 100),
+        maintenanceMarginBps: Math.floor(formData.perpsParams.maintenanceMargin * 100),
+        bandBps: formData.perpsParams.priceBandBps,
+        fundingCapBps: Math.floor(formData.perpsParams.fundingK * 10000),
+        maxLeverage: formData.perpsParams.maxLeverage,
+        openInterestCap: percolator.toFixed(100000000), // 100M cap
+      };
+
+      // Build warmup config
+      const warmupEndMs = formData.perpsParams.warmupHours * 60 * 60 * 1000;
+      const warmupConfig = {
+        enabled: formData.perpsParams.warmupHours > 0,
+        shortEnabled: formData.perpsParams.warmupShortLevCap > 0,
+        shortLeverageCap: formData.perpsParams.warmupShortLevCap,
+        endTimestamp: Math.floor(Date.now() / 1000) + Math.floor(warmupEndMs / 1000),
+      };
+
+      // Build instrument config
+      const instrumentConfig: InstrumentConfig = {
+        symbol: formData.basics.symbol,
+        tickSize: percolator.toFixed(formData.perpsParams.tickSize),
+        lotSize: percolator.toFixed(formData.perpsParams.lotSize),
+        contractSize: percolator.toFixed(1), // 1x multiplier
+      };
+
+      toast({
+        title: "Preparing Transactions...",
+        description: "Building market initialization transactions",
+      });
+
+      // Step 1: Initialize slab (10MB account)
+      const slabTx = await percolator.slab.initSlab(
+        marketId,
+        userPubkey,
+        risk,
+        true, // anti-toxicity enabled
+        userPubkey
+      );
+
+      // Step 2: Create market (router)
+      const marketTx = await percolator.router.createMarket(
+        {
+          marketId,
+          authority: userPubkey,
+          quoteMint,
+          risk,
+          warmup: warmupConfig,
+        },
+        userPubkey
+      );
+
+      // Step 3: Add instrument
+      const instrumentTx = await percolator.slab.addInstrument(
+        marketId,
+        instrumentConfig,
+        userPubkey,
+        userPubkey
+      );
+
+      toast({
+        title: "Transactions Ready",
+        description: "Ready to sign and submit to blockchain...",
+      });
+
+      // TODO: Sign and send transactions
+      // This requires integrating with the custodial wallet service
+      // For now, show informative message
+      toast({
+        title: "⚠️ Wallet Integration Required",
+        description: "Transaction signing is not yet implemented. The transactions have been prepared but need to be signed with your custodial wallet.",
+        variant: "destructive",
+      });
+
+      console.log("Prepared transactions:", {
+        marketId: marketId.toBase58(),
+        slabTx,
+        marketTx,
+        instrumentTx,
+      });
+
+    } catch (error) {
+      console.error("Market deployment failed:", error);
+      toast({
+        title: "Deployment Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   // Redirect to login if not authenticated
@@ -473,10 +596,21 @@ export default function Launch() {
                     <Button
                       className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold"
                       size="lg"
+                      onClick={deployMarket}
+                      disabled={isDeploying}
                       data-testid="button-deploy"
                     >
-                      <Rocket className="w-5 h-5 mr-2" />
-                      Deploy Market
+                      {isDeploying ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Deploying...
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="w-5 h-5 mr-2" />
+                          Deploy Market
+                        </>
+                      )}
                     </Button>
                   </div>
                 </motion.div>

@@ -24,6 +24,16 @@ import type {  CreateMarketParams,
 } from "./types";
 import { connection, getPriorityFee } from "./connection";
 
+/**
+ * IMPORTANT: All transaction builders return unsigned transactions with
+ * placeholder serialization. Actual parameter serialization requires the
+ * Percolator program IDL or layout documentation.
+ * 
+ * Current status: Stubs for transaction structure only.
+ * TODO: Replace placeholder buffers with proper borsh/bincode serialization
+ * matching the deployed Percolator programs.
+ */
+
 // Instruction discriminators (to be finalized based on actual program)
 const DISCRIMINATORS = {
   CREATE_MARKET: 0,
