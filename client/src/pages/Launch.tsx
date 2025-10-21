@@ -38,6 +38,39 @@ export default function Launch() {
     fees: { takerBps: 10, makerBps: -2, creatorFeePct: 30, referrerFeePct: 10 },
   });
 
+  // Show authentication required message
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <Card className="max-w-md w-full p-8 text-center">
+          <Rocket className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h1 className="text-2xl font-mono mb-2 text-foreground">Authentication Required</h1>
+          <p className="text-muted-foreground mb-6">
+            You need to be logged in to launch new markets.
+          </p>
+          <Button 
+            onClick={() => window.location.href = "/api/login"}
+            className="w-full"
+            data-testid="button-login-launch"
+          >
+            Log In to Continue
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   const updateFormData = (section: keyof LaunchFormData, data: any) => {
     setFormData(prev => ({ 
       ...prev, 

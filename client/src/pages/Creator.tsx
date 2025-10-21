@@ -16,6 +16,39 @@ export default function Creator() {
   const { isAuthenticated, isLoading } = useAuth();
   const [referralCode] = useState("SLAB-CREATOR-XYZ123");
 
+  // Show authentication required message
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <Card className="max-w-md w-full p-8 text-center">
+          <Rocket className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h1 className="text-2xl font-mono mb-2 text-foreground">Authentication Required</h1>
+          <p className="text-muted-foreground mb-6">
+            You need to be logged in to access creator analytics and earnings.
+          </p>
+          <Button 
+            onClick={() => window.location.href = "/api/login"}
+            className="w-full"
+            data-testid="button-login-creator"
+          >
+            Log In to Continue
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   const mockStats = {
     totalEarnings: 12543.67,
     earningsChange: 23.45,
