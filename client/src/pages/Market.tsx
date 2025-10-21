@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MiniCandleCanvas } from "@/components/shared/MiniCandleCanvas";
 import { OrderBook } from "@/components/shared/OrderBook";
@@ -30,6 +31,7 @@ export default function Market() {
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [size, setSize] = useState("");
   const [limitPrice, setLimitPrice] = useState("");
+  const [multiplier, setMultiplier] = useState([1]);
 
   useEffect(() => {
     const loadMarketData = async () => {
@@ -70,9 +72,10 @@ export default function Market() {
   }
 
   const isPriceUp = market.metrics.priceChange24h >= 0;
+  const effectiveSize = parseFloat(size || "0") * multiplier[0];
   const total = orderType === "market" 
-    ? parseFloat(size || "0") * market.metrics.currentPrice
-    : parseFloat(size || "0") * parseFloat(limitPrice || "0");
+    ? effectiveSize * market.metrics.currentPrice
+    : effectiveSize * parseFloat(limitPrice || "0");
 
   return (
     <div className="space-y-4 px-4 py-4">
@@ -266,6 +269,32 @@ export default function Market() {
                 />
               </div>
 
+              {/* Multiplier Slider */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label className="text-[10px] text-muted-foreground">
+                    MULTIPLIER
+                  </Label>
+                  <span className="text-xs font-bold font-mono text-primary" data-numeric="true">
+                    {multiplier[0]}x
+                  </span>
+                </div>
+                <Slider
+                  value={multiplier}
+                  onValueChange={setMultiplier}
+                  max={100}
+                  min={1}
+                  step={1}
+                  className="mb-1"
+                  data-testid="slider-multiplier"
+                />
+                <div className="flex justify-between text-[9px] text-muted-foreground">
+                  <span>1x</span>
+                  <span>50x</span>
+                  <span>100x</span>
+                </div>
+              </div>
+
               {/* Order Summary */}
               <div className="space-y-1.5 text-[10px] p-3 bg-background/50 border border-primary/20">
                 <div className="flex justify-between">
@@ -277,6 +306,16 @@ export default function Market() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">SIZE</span>
                   <span className="font-mono" data-numeric="true">{size || "0.00"}</span>
+                </div>
+                {multiplier[0] > 1 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">MULTIPLIER</span>
+                    <span className="font-mono text-primary" data-numeric="true">{multiplier[0]}x</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">EFFECTIVE_SIZE</span>
+                  <span className="font-mono" data-numeric="true">{effectiveSize.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between pt-1.5 border-t border-primary/20">
                   <span className="text-primary">TOTAL</span>
