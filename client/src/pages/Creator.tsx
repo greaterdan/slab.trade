@@ -6,12 +6,14 @@ import { KPIStat } from "@/components/shared/KPIStat";
 import { MarketTile } from "@/components/shared/MarketTile";
 import { DollarSign, TrendingUp, Rocket, Copy, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import type { Market } from "@shared/schema";
 
 export default function Creator() {
   const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
   const [referralCode] = useState("SLAB-CREATOR-XYZ123");
 
   const mockStats = {
@@ -87,6 +89,31 @@ export default function Creator() {
       duration: 2000,
     });
   };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to access the creator dashboard. Redirecting to login...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Show nothing while checking auth or redirecting
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="text-lg text-muted-foreground">Checking authentication...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

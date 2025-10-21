@@ -2,7 +2,12 @@ import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import crypto from "crypto";
 
-const ENCRYPTION_KEY = process.env.WALLET_ENCRYPTION_KEY || "dev-encryption-key-32-characters!";
+// Fail fast if encryption key is missing
+if (!process.env.WALLET_ENCRYPTION_KEY) {
+  throw new Error("WALLET_ENCRYPTION_KEY environment variable is required for secure wallet storage");
+}
+
+const ENCRYPTION_KEY = process.env.WALLET_ENCRYPTION_KEY;
 const ALGORITHM = "aes-256-cbc";
 
 /**

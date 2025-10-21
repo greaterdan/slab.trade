@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { ChevronLeft, ChevronRight, Check, Rocket } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MarketTile } from "@/components/shared/MarketTile";
 import type { LaunchFormData, BondingCurveType } from "@shared/schema";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const steps = [
   { number: 1, title: "Basics", subtitle: "Name, symbol, image" },
@@ -20,6 +22,8 @@ const steps = [
 ];
 
 export default function Launch() {
+  const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<LaunchFormData>({
     step: 1,
@@ -38,6 +42,31 @@ export default function Launch() {
     if (currentStep === 1) return formData.basics.name && formData.basics.symbol;
     return true;
   };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to launch a market. Redirecting to login...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Show nothing while checking auth or redirecting
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="text-lg text-muted-foreground">Checking authentication...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">

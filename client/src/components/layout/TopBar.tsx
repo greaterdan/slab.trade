@@ -1,10 +1,21 @@
-import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, FileText, Menu } from "lucide-react";
+import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, FileText, Menu, LogOut, Key, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
@@ -16,9 +27,36 @@ const navItems = [
 ];
 
 export function TopBar() {
+  const { toast } = useToast();
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location, navigate] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+
+  // Export private key mutation
+  const exportKeyMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/wallet/export-key", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to export private key");
+      return res.json();
+    },
+    onSuccess: (data: { privateKey: string }) => {
+      navigator.clipboard.writeText(data.privateKey);
+      toast({
+        title: "Private Key Copied",
+        description: "Your private key has been copied to clipboard. Keep it safe!",
+        variant: "destructive",
+        duration: 5000,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to export private key",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,6 +73,25 @@ export function TopBar() {
   const handleNavigation = (path: string) => {
     navigate(path);
     setMobileMenuOpen(false);
+  };
+
+  const copyAddress = () => {
+    if (user?.wallet?.publicKey) {
+      navigator.clipboard.writeText(user.wallet.publicKey);
+      toast({
+        title: "Copied",
+        description: "Wallet address copied to clipboard",
+        duration: 2000,
+      });
+    }
+  };
+
+  const exportPrivateKey = () => {
+    exportKeyMutation.mutate();
+  };
+
+  const truncateAddress = (address: string) => {
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
   return (
@@ -141,16 +198,80 @@ export function TopBar() {
           </Badge>
         </Button>
 
-        {/* Wallet Connect */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
-          data-testid="button-wallet-connect"
-        >
-          <Wallet className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline text-xs">CONNECT</span>
-        </Button>
+        {/* Login / Wallet Display */}
+        {!isAuthenticated ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
+            onClick={() => window.location.href = "/api/login"}
+            data-testid="button-login"
+          >
+            <User className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline text-xs">LOGIN</span>
+          </Button>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
+                data-testid="button-wallet-menu"
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-xs font-mono">
+                  {user?.wallet?.publicKey ? truncateAddress(user.wallet.publicKey) : "WALLET"}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 bg-background border-primary/20">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                YOUR WALLET
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-primary/20" />
+              
+              {/* Wallet Address */}
+              <div className="px-2 py-2 space-y-1">
+                <div className="text-xs text-muted-foreground">Address</div>
+                <div className="text-xs font-mono text-primary" data-testid="text-wallet-address">
+                  {user?.wallet?.publicKey || "Loading..."}
+                </div>
+              </div>
+
+              {/* Balance */}
+              <div className="px-2 py-2 space-y-1">
+                <div className="text-xs text-muted-foreground">Balance</div>
+                <div className="text-xs font-mono text-primary" data-testid="text-wallet-balance">
+                  {user?.wallet?.balance || "0"} SOL
+                </div>
+              </div>
+              
+              <DropdownMenuSeparator className="bg-primary/20" />
+              
+              <DropdownMenuItem onClick={copyAddress} className="text-xs hover:bg-primary/10" data-testid="menu-copy-address">
+                <Copy className="w-3.5 h-3.5 mr-2" />
+                Copy Address
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={exportPrivateKey} className="text-xs hover:bg-primary/10" data-testid="menu-export-key">
+                <Key className="w-3.5 h-3.5 mr-2" />
+                Export Private Key
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator className="bg-primary/20" />
+              
+              <DropdownMenuItem
+                onClick={() => window.location.href = "/api/logout"}
+                className="text-xs text-destructive hover:bg-destructive/10"
+                data-testid="menu-logout"
+              >
+                <LogOut className="w-3.5 h-3.5 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </header>
   );
