@@ -41,19 +41,32 @@ export const users = pgTable("users", {
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
 
-// Wallets table - Custodial Solana wallets for each user
+// Wallets table - Custodial Solana wallets for each user (supports multiple wallets)
 export const wallets = pgTable("wallets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name").notNull().default("Main Wallet"), // User-defined wallet name
   publicKey: varchar("public_key").notNull().unique(),
   encryptedPrivateKey: text("encrypted_private_key").notNull(), // Encrypted with app secret
   balance: decimal("balance", { precision: 18, scale: 9 }).notNull().default("0"), // SOL balance
+  isPrimary: varchar("is_primary").notNull().default("false"), // Primary wallet for user
+  isArchived: varchar("is_archived").notNull().default("false"), // Archived/hidden from main view
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type Wallet = typeof wallets.$inferSelect;
 export type InsertWallet = typeof wallets.$inferInsert;
+
+// Zod schemas for wallet operations
+export const createWalletSchema = z.object({
+  name: z.string().min(1).max(50),
+});
+
+export const updateWalletSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  isArchived: z.string().optional(),
+});
 
 // ============================================================================
 // TRADING TYPES (unchanged)

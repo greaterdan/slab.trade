@@ -201,6 +201,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== MULTI-WALLET MANAGEMENT ENDPOINTS ==========
+
+  // List all wallets for authenticated user
+  app.get("/api/wallets", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const allWallets = await storage.getAllUserWallets(userId);
+      
+      // Don't expose encrypted private keys in list view
+      const sanitizedWallets = allWallets.map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        publicKey: w.publicKey,
+        balance: w.balance,
+        isPrimary: w.isPrimary,
+        isArchived: w.isArchived,
+        createdAt: w.createdAt,
+      }));
+
+      res.json(sanitizedWallets);
+    } catch (error) {
+      console.error("Error fetching wallets:", error);
+      res.status(500).json({ message: "Failed to fetch wallets" });
+    }
+  });
+
+  // Create additional wallet for authenticated user
+  app.post("/api/wallets", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name } = req.body;
+
+      if (!name || typeof name !== "string" || name.length === 0) {
+        return res.status(400).json({ message: "Wallet name is required" });
+      }
+
+      // Create new wallet
+      const { publicKey, encryptedPrivateKey } = WalletService.createWallet();
+
+      const newWallet = await storage.createAdditionalWallet({
+        userId,
+        name,
+        publicKey,
+        encryptedPrivateKey,
+        balance: "0",
+        isPrimary: "false",
+        isArchived: "false",
+      });
+
+      // Don't expose encrypted private key
+      res.json({
+        id: newWallet.id,
+        name: newWallet.name,
+        publicKey: newWallet.publicKey,
+        balance: newWallet.balance,
+        isPrimary: newWallet.isPrimary,
+        isArchived: newWallet.isArchived,
+      });
+    } catch (error) {
+      console.error("Error creating wallet:", error);
+      res.status(500).json({ message: "Failed to create wallet" });
+    }
+  });
+
+  // Update wallet (rename or archive)
+  app.patch("/api/wallets/:walletId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { walletId } = req.params;
+      const { name, isArchived } = req.body;
+
+      const wallet = await storage.getWalletById(walletId);
+      
+      if (!wallet || wallet.userId !== userId) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      const updatedWallet = await storage.updateWallet(walletId, {
+        name: name || wallet.name,
+        isArchived: isArchived !== undefined ? isArchived : wallet.isArchived,
+      });
+
+      res.json({
+        id: updatedWallet.id,
+        name: updatedWallet.name,
+        publicKey: updatedWallet.publicKey,
+        balance: updatedWallet.balance,
+        isPrimary: updatedWallet.isPrimary,
+        isArchived: updatedWallet.isArchived,
+      });
+    } catch (error) {
+      console.error("Error updating wallet:", error);
+      res.status(500).json({ message: "Failed to update wallet" });
+    }
+  });
+
+  // Refresh specific wallet balance from blockchain
+  app.get("/api/wallets/:walletId/balance", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { walletId } = req.params;
+
+      const wallet = await storage.getWalletById(walletId);
+
+      if (!wallet || wallet.userId !== userId) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      // Fetch balance from Solana blockchain
+      const publicKey = new PublicKey(wallet.publicKey);
+      const balance = await connection.getBalance(publicKey);
+      const balanceInSol = balance / LAMPORTS_PER_SOL;
+
+      // Update cached balance in database
+      await storage.updateWalletBalance(wallet.id, balanceInSol.toString());
+
+      res.json({ 
+        balance: balanceInSol,
+        publicKey: wallet.publicKey 
+      });
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+      res.status(500).json({ message: "Failed to fetch balance" });
+    }
+  });
+
+  // Export private key for a specific wallet
+  app.get("/api/wallets/:walletId/export-key", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { walletId } = req.params;
+
+      const wallet = await storage.getWalletById(walletId);
+
+      if (!wallet || wallet.userId !== userId) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      const privateKey = WalletService.exportPrivateKey(wallet.encryptedPrivateKey);
+
+      res.json({ privateKey });
+    } catch (error) {
+      console.error("Error exporting private key:", error);
+      res.status(500).json({ message: "Failed to export private key" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

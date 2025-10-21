@@ -12,6 +12,12 @@ export interface IStorage {
   getUserWallet(userId: string): Promise<Wallet | undefined>;
   createWallet(userId: string): Promise<Wallet>;
   updateWalletBalance(walletId: string, balance: string): Promise<Wallet>;
+  
+  // Multi-wallet operations
+  getAllUserWallets(userId: string): Promise<Wallet[]>;
+  createAdditionalWallet(wallet: InsertWallet): Promise<Wallet>;
+  getWalletById(walletId: string): Promise<Wallet | undefined>;
+  updateWallet(walletId: string, updates: { name?: string; isArchived?: string }): Promise<Wallet>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -62,6 +68,35 @@ export class DatabaseStorage implements IStorage {
     const [wallet] = await db
       .update(wallets)
       .set({ balance, updatedAt: new Date() })
+      .where(eq(wallets.id, walletId))
+      .returning();
+    
+    return wallet;
+  }
+
+  // Multi-wallet operations
+  async getAllUserWallets(userId: string): Promise<Wallet[]> {
+    return await db.select().from(wallets).where(eq(wallets.userId, userId));
+  }
+
+  async createAdditionalWallet(wallet: InsertWallet): Promise<Wallet> {
+    const [newWallet] = await db
+      .insert(wallets)
+      .values(wallet)
+      .returning();
+    
+    return newWallet;
+  }
+
+  async getWalletById(walletId: string): Promise<Wallet | undefined> {
+    const [wallet] = await db.select().from(wallets).where(eq(wallets.id, walletId));
+    return wallet;
+  }
+
+  async updateWallet(walletId: string, updates: { name?: string; isArchived?: string }): Promise<Wallet> {
+    const [wallet] = await db
+      .update(wallets)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(wallets.id, walletId))
       .returning();
     
