@@ -1,8 +1,11 @@
-import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, FileText, Menu, LogOut, Key, Copy } from "lucide-react";
+import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, FileText, Menu, LogOut, Key, Copy, Download, Upload, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +18,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
@@ -28,8 +32,13 @@ const navItems = [
 
 export function TopBar() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [walletDialogOpen, setWalletDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("deposit");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [recipientAddress, setRecipientAddress] = useState("");
   const [location, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
 
@@ -53,6 +62,55 @@ export function TopBar() {
       toast({
         title: "Error",
         description: "Failed to export private key",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Refresh balance mutation
+  const refreshBalanceMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/wallet/balance", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to refresh balance");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Balance Updated",
+        description: "Your wallet balance has been refreshed",
+        duration: 2000,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to refresh balance",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Withdraw mutation
+  const withdrawMutation = useMutation({
+    mutationFn: async (data: { recipientAddress: string; amount: string }) => {
+      const res = await apiRequest("POST", "/api/wallet/withdraw", data);
+      return await res.json();
+    },
+    onSuccess: (data: { signature: string; newBalance: number; explorerUrl: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setWithdrawAmount("");
+      setRecipientAddress("");
+      toast({
+        title: "Withdrawal Successful",
+        description: `Transaction: ${data.signature.slice(0, 8)}... New balance: ${data.newBalance.toFixed(4)} SOL`,
+        duration: 5000,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Withdrawal Failed",
+        description: error.message || "Failed to withdraw SOL",
         variant: "destructive",
       });
     },
@@ -92,6 +150,23 @@ export function TopBar() {
 
   const truncateAddress = (address: string) => {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  };
+
+  const openWalletDialog = (tab: "deposit" | "withdraw") => {
+    setActiveTab(tab);
+    setWalletDialogOpen(true);
+  };
+
+  const handleWithdraw = () => {
+    if (!recipientAddress || !withdrawAmount) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter recipient address and amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    withdrawMutation.mutate({ recipientAddress, amount: withdrawAmount });
   };
 
   return (
@@ -249,6 +324,23 @@ export function TopBar() {
               
               <DropdownMenuSeparator className="bg-primary/20" />
               
+              <DropdownMenuItem onClick={() => openWalletDialog("deposit")} className="text-xs hover:bg-primary/10" data-testid="menu-deposit">
+                <Download className="w-3.5 h-3.5 mr-2" />
+                Deposit SOL
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => openWalletDialog("withdraw")} className="text-xs hover:bg-primary/10" data-testid="menu-withdraw">
+                <Upload className="w-3.5 h-3.5 mr-2" />
+                Withdraw SOL
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => refreshBalanceMutation.mutate()} disabled={refreshBalanceMutation.isPending} className="text-xs hover:bg-primary/10" data-testid="menu-refresh-balance">
+                <RefreshCw className={`w-3.5 h-3.5 mr-2 ${refreshBalanceMutation.isPending ? "animate-spin" : ""}`} />
+                Refresh Balance
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator className="bg-primary/20" />
+              
               <DropdownMenuItem onClick={copyAddress} className="text-xs hover:bg-primary/10" data-testid="menu-copy-address">
                 <Copy className="w-3.5 h-3.5 mr-2" />
                 Copy Address
@@ -273,6 +365,143 @@ export function TopBar() {
           </DropdownMenu>
         )}
       </div>
+
+      {/* Wallet Dialog */}
+      <Dialog open={walletDialogOpen} onOpenChange={setWalletDialogOpen}>
+        <DialogContent className="bg-background border-primary/20 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary text-xs font-bold">WALLET.MANAGEMENT</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs">
+              &gt; DEPOSIT_OR_WITHDRAW_SOL
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "deposit" | "withdraw")} className="mt-4">
+            <TabsList className="grid w-full grid-cols-2 bg-background border border-primary/20">
+              <TabsTrigger 
+                value="deposit" 
+                className="text-[10px] data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                data-testid="tab-deposit"
+              >
+                [DEPOSIT]
+              </TabsTrigger>
+              <TabsTrigger 
+                value="withdraw" 
+                className="text-[10px] data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                data-testid="tab-withdraw"
+              >
+                [WITHDRAW]
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Deposit Tab */}
+            <TabsContent value="deposit" className="space-y-4 mt-4">
+              <div className="p-4 bg-background/50 border border-primary/20 space-y-3">
+                <div className="text-[10px] text-muted-foreground">
+                  &gt; SEND_SOL_TO_THIS_ADDRESS
+                </div>
+                <div className="p-3 bg-background border border-primary/20 break-all">
+                  <div className="text-xs font-mono text-primary" data-testid="text-deposit-address">
+                    {user?.wallet?.publicKey || "Loading..."}
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyAddress}
+                  className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                  data-testid="button-copy-deposit-address"
+                >
+                  <Copy className="w-3.5 h-3.5 mr-2" />
+                  COPY_ADDRESS
+                </Button>
+              </div>
+              
+              <div className="p-3 bg-warning/10 border border-warning/30 text-[10px] text-warning">
+                &gt; DEVNET_ONLY: Use Solana devnet faucet to get test SOL
+              </div>
+              
+              <div className="text-[9px] text-muted-foreground text-center">
+                &gt; TRANSACTION_CONFIRMATIONS: 2-3 BLOCKS (~1-2 MIN)
+              </div>
+            </TabsContent>
+
+            {/* Withdraw Tab */}
+            <TabsContent value="withdraw" className="space-y-4 mt-4">
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="recipient-address" className="text-[10px] text-muted-foreground mb-1.5 block">
+                    RECIPIENT_ADDRESS
+                  </Label>
+                  <Input
+                    id="recipient-address"
+                    type="text"
+                    placeholder="Enter Solana address..."
+                    value={recipientAddress}
+                    onChange={(e) => setRecipientAddress(e.target.value)}
+                    className="font-mono text-xs h-9 bg-background border-primary/20"
+                    data-testid="input-recipient-address"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="withdraw-amount" className="text-[10px] text-muted-foreground mb-1.5 block">
+                    AMOUNT (SOL)
+                  </Label>
+                  <Input
+                    id="withdraw-amount"
+                    type="number"
+                    step="0.001"
+                    placeholder="0.00"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    className="font-mono text-sm h-9 bg-background border-primary/20"
+                    data-testid="input-withdraw-amount"
+                  />
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    Available: {user?.wallet?.balance || "0"} SOL
+                  </div>
+                </div>
+
+                <div className="p-3 bg-background/50 border border-primary/20 space-y-1.5 text-[10px]">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">EST_FEE</span>
+                    <span className="font-mono" data-numeric="true">~0.00001 SOL</span>
+                  </div>
+                  <div className="flex justify-between pt-1.5 border-t border-primary/20">
+                    <span className="text-primary">TOTAL</span>
+                    <span className="font-mono font-bold text-primary" data-numeric="true">
+                      {withdrawAmount ? (parseFloat(withdrawAmount) + 0.00001).toFixed(5) : "0.00000"} SOL
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleWithdraw}
+                  disabled={!recipientAddress || !withdrawAmount || withdrawMutation.isPending}
+                  className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                  data-testid="button-withdraw-submit"
+                >
+                  {withdrawMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
+                      PROCESSING...
+                    </>
+                  ) : (
+                    "[WITHDRAW_SOL]"
+                  )}
+                </Button>
+              </div>
+              
+              <div className="text-[9px] text-muted-foreground text-center">
+                &gt; TRANSACTION_FINALITY: ~30-60 SEC
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
