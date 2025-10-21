@@ -1,4 +1,63 @@
 import { z } from "zod";
+import { sql } from "drizzle-orm";
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  decimal,
+} from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+
+// ============================================================================
+// AUTHENTICATION & WALLET TABLES (Replit Auth + Custodial Wallets)
+// ============================================================================
+
+// Session storage table - Required for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)]
+);
+
+// User storage table - Required for Replit Auth
+// IMPORTANT: Keeps default config for id column per Replit Auth blueprint
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type User = typeof users.$inferSelect;
+export type UpsertUser = typeof users.$inferInsert;
+
+// Wallets table - Custodial Solana wallets for each user
+export const wallets = pgTable("wallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  publicKey: varchar("public_key").notNull().unique(),
+  encryptedPrivateKey: text("encrypted_private_key").notNull(), // Encrypted with app secret
+  balance: decimal("balance", { precision: 18, scale: 9 }).notNull().default("0"), // SOL balance
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type Wallet = typeof wallets.$inferSelect;
+export type InsertWallet = typeof wallets.$inferInsert;
+
+// ============================================================================
+// TRADING TYPES (unchanged)
+// ============================================================================
 
 export type MarketStatus = "bonding" | "warmup" | "perps";
 
@@ -186,22 +245,4 @@ export const launchFormSchema = z.object({
     creatorFeePct: z.number().min(0).max(100),
     referrerFeePct: z.number().min(0).max(100),
   }),
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
 });
