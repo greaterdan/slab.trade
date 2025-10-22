@@ -15,7 +15,7 @@ export function TradesFeed({ trades, className = "" }: TradesFeedProps) {
 
   return (
     <div className={`${className}`}>
-      <div className="grid grid-cols-4 gap-2 px-3 py-2 text-xs text-muted-foreground uppercase tracking-wide border-b border-border">
+      <div className="grid grid-cols-4 gap-2 px-3 py-2 text-xs text-foreground uppercase tracking-wide border-b border-border">
         <div>Time</div>
         <div className="text-right">Price</div>
         <div className="text-right">Size</div>
@@ -40,7 +40,7 @@ export function TradesFeed({ trades, className = "" }: TradesFeedProps) {
               <div className={`text-xs font-mono text-right ${trade.side === "buy" ? "text-success" : "text-destructive"}`} data-numeric="true">
                 {trade.price.toFixed(4)}
               </div>
-              <div className="text-xs font-mono text-right" data-numeric="true">
+              <div className="text-xs font-mono text-right text-foreground" data-numeric="true">
                 {trade.size.toFixed(2)}
               </div>
               <div className="flex items-center justify-end gap-1">

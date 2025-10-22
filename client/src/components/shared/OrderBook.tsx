@@ -31,10 +31,10 @@ export function OrderBook({ bids, asks, className = "" }: OrderBookProps) {
         <div className={`relative font-mono text-sm ${type === "bid" ? "text-success" : "text-destructive"}`} data-numeric="true">
           {formatPrice(entry.price)}
         </div>
-        <div className="relative font-mono text-sm text-right" data-numeric="true">
+        <div className="relative font-mono text-sm text-right text-foreground" data-numeric="true">
           {formatSize(entry.size)}
         </div>
-        <div className="relative font-mono text-sm text-right text-muted-foreground" data-numeric="true">
+        <div className="relative font-mono text-sm text-right text-foreground" data-numeric="true">
           {formatSize(entry.total)}
         </div>
       </motion.div>
@@ -43,7 +43,7 @@ export function OrderBook({ bids, asks, className = "" }: OrderBookProps) {
 
   return (
     <div className={`${className}`}>
-      <div className="grid grid-cols-3 gap-2 px-3 py-2 text-xs text-muted-foreground uppercase tracking-wide border-b border-border">
+      <div className="grid grid-cols-3 gap-2 px-3 py-2 text-xs text-foreground uppercase tracking-wide border-b border-border">
         <div>Price</div>
         <div className="text-right">Size</div>
         <div className="text-right">Total</div>
@@ -58,7 +58,7 @@ export function OrderBook({ bids, asks, className = "" }: OrderBookProps) {
       <div className="px-3 py-2 bg-muted/20 border-y border-border">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Spread</span>
-          <span className="font-mono font-medium" data-numeric="true">
+          <span className="font-mono font-medium text-foreground" data-numeric="true">
             {asks[0] && bids[0] ? (asks[0].price - bids[0].price).toFixed(4) : "—"}
           </span>
         </div>

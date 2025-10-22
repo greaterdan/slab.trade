@@ -149,18 +149,20 @@ export default function Creator() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-3xl font-bold mb-2">Creator Dashboard</h1>
-        <p className="text-muted-foreground">
-          Track your earnings, markets, and referrals
-        </p>
-      </motion.div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h1 className="text-3xl font-bold mb-2">Creator Dashboard</h1>
+            <p className="text-muted-foreground">
+              Track your earnings, markets, and referrals
+            </p>
+          </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -331,6 +333,8 @@ export default function Creator() {
           </div>
         </Card>
       </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

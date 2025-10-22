@@ -175,12 +175,12 @@ export default function Dashboard() {
             <table className="w-full font-mono text-xs">
               <thead>
                 <tr className="border-b border-primary/20 text-muted-foreground">
-                  <th className="text-left p-3 font-medium">MARKET</th>
-                  <th className="text-left p-3 font-medium">STATUS</th>
-                  <th className="text-right p-3 font-medium">GRAD%</th>
-                  <th className="text-right p-3 font-medium">24H_VOL</th>
-                  <th className="text-right p-3 font-medium">OPEN_INT</th>
-                  <th className="text-right p-3 font-medium">ACTION</th>
+                  <th className="text-left p-3 font-medium text-foreground">MARKET</th>
+                  <th className="text-left p-3 font-medium text-foreground">STATUS</th>
+                  <th className="text-right p-3 font-medium text-foreground">GRAD%</th>
+                  <th className="text-right p-3 font-medium text-foreground">24H_VOL</th>
+                  <th className="text-right p-3 font-medium text-foreground">OPEN_INT</th>
+                  <th className="text-right p-3 font-medium text-foreground">ACTION</th>
                 </tr>
               </thead>
               <tbody>
@@ -212,13 +212,13 @@ export default function Dashboard() {
                             style={{ width: `${market.metrics.graduationProgress}%` }}
                           />
                         </div>
-                        <span className="font-mono text-xs text-muted-foreground" data-numeric="true">{market.metrics.graduationProgress}%</span>
+                        <span className="font-mono text-xs text-foreground" data-numeric="true">{market.metrics.graduationProgress}%</span>
                       </div>
                     </td>
-                    <td className="p-3 text-right font-mono text-muted-foreground" data-numeric="true">
+                    <td className="p-3 text-right font-mono text-foreground" data-numeric="true">
                       ${(market.metrics.volume24h / 1e3).toFixed(0)}K
                     </td>
-                    <td className="p-3 text-right font-mono text-muted-foreground" data-numeric="true">
+                    <td className="p-3 text-right font-mono text-foreground" data-numeric="true">
                       ${(market.metrics.openInterest / 1e3).toFixed(0)}K
                     </td>
                     <td className="p-3 text-right">

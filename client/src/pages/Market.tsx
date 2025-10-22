@@ -162,13 +162,13 @@ export default function Market() {
         <div className="flex items-center gap-6 text-xs">
           <div>
             <div className="text-muted-foreground mb-1">24H_VOL</div>
-            <div className="font-mono font-bold" data-numeric="true">
+            <div className="font-mono font-bold text-foreground" data-numeric="true">
               ${(market.metrics.volume24h / 1e3).toFixed(0)}K
             </div>
           </div>
           <div>
             <div className="text-muted-foreground mb-1">OPEN_INT</div>
-            <div className="font-mono font-bold" data-numeric="true">
+            <div className="font-mono font-bold text-foreground" data-numeric="true">
               ${(market.metrics.openInterest / 1e3).toFixed(0)}K
             </div>
           </div>
@@ -191,9 +191,9 @@ export default function Market() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <div>
-                  <div className="text-xl font-bold font-mono" data-numeric="true">
-                    ${market.metrics.currentPrice.toFixed(8)}
-                  </div>
+            <div className="text-xl font-bold font-mono text-foreground" data-numeric="true">
+              ${market.metrics.currentPrice.toFixed(8)}
+            </div>
                   <div className={`flex items-center gap-1 text-xs ${isPriceUp ? "text-success" : "text-destructive"}`}>
                     {isPriceUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                     <span className="font-mono" data-numeric="true">
@@ -359,13 +359,13 @@ export default function Market() {
               <div className="space-y-1.5 text-[10px] p-3 bg-background/50 border border-primary/20">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">PRICE</span>
-                  <span className="font-mono" data-numeric="true">
+                  <span className="font-mono text-foreground" data-numeric="true">
                     ${orderType === "market" ? market.metrics.currentPrice.toFixed(4) : (limitPrice || "0.0000")}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">SIZE</span>
-                  <span className="font-mono" data-numeric="true">{size || "0.00"}</span>
+                  <span className="font-mono text-foreground" data-numeric="true">{size || "0.00"}</span>
                 </div>
                 {multiplier[0] > 1 && (
                   <div className="flex justify-between">
@@ -375,7 +375,7 @@ export default function Market() {
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">EFFECTIVE_SIZE</span>
-                  <span className="font-mono" data-numeric="true">{effectiveSize.toFixed(2)}</span>
+                  <span className="font-mono text-foreground" data-numeric="true">{effectiveSize.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between pt-1.5 border-t border-primary/20">
                   <span className="text-primary">TOTAL</span>

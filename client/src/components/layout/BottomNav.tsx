@@ -257,7 +257,7 @@ export function BottomNav() {
                   {crypto.icon}
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-sm font-mono">{formatPrice(crypto.price)}</span>
+                  <span className="text-sm font-mono text-foreground">{formatPrice(crypto.price)}</span>
                   <span className={`text-xs ${getChangeColor(crypto.change24h)}`}>
                     {formatChange(crypto.change24h)}
                   </span>
@@ -278,7 +278,10 @@ export function BottomNav() {
             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="w-4 h-4" />
             </button>
-            <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+            <button 
+              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => window.open('https://x.com/slabtrade', '_blank')}
+            >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
               </svg>
@@ -374,7 +377,7 @@ export function BottomNav() {
           >
             <Card className="p-3 w-64 bg-card border shadow-lg">
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Select Wallet</h3>
+                <h3 className="font-semibold text-sm text-foreground">Select Wallet</h3>
                 {wallets.map((wallet) => (
                   <button
                     key={wallet.id}
@@ -390,11 +393,11 @@ export function BottomNav() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium">{wallet.name}</p>
+                        <p className="text-sm font-medium text-foreground">{wallet.name}</p>
                         <p className="text-xs text-muted-foreground">{wallet.publicKey}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-mono">{wallet.balance} SOL</p>
+                        <p className="text-sm font-mono text-foreground">{wallet.balance} SOL</p>
                       </div>
                     </div>
                   </button>
@@ -484,11 +487,11 @@ export function BottomNav() {
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-xs">{wallet.name}</p>
+                              <p className="font-medium text-xs text-foreground">{wallet.name}</p>
                               <p className="text-[10px] text-muted-foreground">{wallet.address}</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-xs font-mono">{wallet.totalValue}</p>
+                              <p className="text-xs font-mono text-foreground">{wallet.totalValue}</p>
                               <p className={`text-[10px] ${wallet.pnl.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
                                 {wallet.pnl}
                               </p>
@@ -554,7 +557,7 @@ export function BottomNav() {
                         <Card key={wallet.id} className="p-2 bg-card/50 border-border/30 shadow-sm hover:shadow-md transition-shadow">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-xs">{wallet.name}</p>
+                              <p className="font-medium text-xs text-foreground">{wallet.name}</p>
                               <p className="text-[10px] text-muted-foreground">{wallet.address}</p>
                             </div>
                             <button className="text-red-400 hover:text-red-300 text-xs">

@@ -397,7 +397,7 @@ export default function Launch() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Slab Basics</h2>
+                    <h2 className="text-2xl font-bold mb-2 text-foreground">Slab Basics</h2>
                     <p className="text-sm text-muted-foreground">Set up your slab identity</p>
                   </div>
 
@@ -531,7 +531,7 @@ export default function Launch() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Social Links</h2>
+                    <h2 className="text-2xl font-bold mb-2 text-foreground">Social Links</h2>
                     <p className="text-sm text-muted-foreground">Add your social media links (optional)</p>
                   </div>
 
@@ -589,7 +589,7 @@ export default function Launch() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Deploy Your Slab</h2>
+                    <h2 className="text-2xl font-bold mb-2 text-foreground">Deploy Your Slab</h2>
                     <p className="text-sm text-muted-foreground">Configure deployment settings and launch your bonding curve market</p>
                   </div>
 
@@ -621,20 +621,20 @@ export default function Launch() {
                     <Separator />
 
                     <div className="space-y-3">
-                      <h3 className="font-semibold text-lg">Deployment Summary</h3>
+                      <h3 className="font-semibold text-lg text-foreground">Deployment Summary</h3>
                       
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Slab Name</span>
-                          <span className="font-medium">{formData.basics.name}</span>
+                          <span className="font-medium text-foreground">{formData.basics.name}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Symbol</span>
-                          <span className="font-medium">{formData.basics.symbol}</span>
+                          <span className="font-medium text-foreground">{formData.basics.symbol}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Initial SOL</span>
-                          <span className="font-medium">{formData.deployment.creatorSolAmount} SOL</span>
+                          <span className="font-medium text-foreground">{formData.deployment.creatorSolAmount} SOL</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Graduation Threshold</span>
@@ -642,7 +642,7 @@ export default function Launch() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Bonding Curve</span>
-                          <span className="font-medium">Meteora DBC</span>
+                          <span className="font-medium text-foreground">Meteora DBC</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Deployment Cost</span>
@@ -655,7 +655,7 @@ export default function Launch() {
                       <div className="flex items-start gap-3">
                         <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
                         <div className="space-y-2">
-                          <h4 className="font-semibold">Ready to Launch</h4>
+                          <h4 className="font-semibold text-foreground">Ready to Launch</h4>
                           <p className="text-sm text-muted-foreground">
                             Your slab will be created with Meteora's Dynamic Bonding Curve. 
                             Graduation happens automatically at 80 SOL total liquidity.
@@ -722,7 +722,7 @@ export default function Launch() {
         {/* Live Summary - 1 col */}
         <div>
           <Card className="p-6 border-card-border bg-card sticky top-24">
-            <h3 className="text-lg font-semibold mb-4">Live Preview</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Live Preview</h3>
 
             {formData.basics.symbol ? (
               <div className="space-y-4">
@@ -739,7 +739,7 @@ export default function Launch() {
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-lg">{formData.basics.symbol}</h4>
+                  <h4 className="font-bold text-lg text-foreground">{formData.basics.symbol}</h4>
                   <p className="text-sm text-muted-foreground">{formData.basics.name || "Your slab name"}</p>
                   {formData.basics.description && (
                     <p className="text-xs text-muted-foreground mt-1">{formData.basics.description}</p>
@@ -766,7 +766,7 @@ export default function Launch() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Initial SOL</span>
-                      <span className="font-mono font-medium">{formData.deployment.creatorSolAmount} SOL</span>
+                      <span className="font-mono font-medium text-foreground">{formData.deployment.creatorSolAmount} SOL</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Graduation</span>
@@ -774,7 +774,7 @@ export default function Launch() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tax Rate</span>
-                      <span className="font-mono font-medium">4% → 1%</span>
+                      <span className="font-mono font-medium text-foreground">4% → 1%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Deployment</span>

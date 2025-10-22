@@ -29,7 +29,7 @@ export function KPIStat({ label, value, change, icon: Icon, trend, className = "
         <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
       </div>
       <div className="flex items-baseline gap-2">
-        <span className="text-xl font-bold font-mono" data-numeric="true">{value}</span>
+        <span className="text-xl font-bold font-mono text-foreground" data-numeric="true">{value}</span>
         {change !== undefined && (
           <span className={`text-sm font-medium ${getTrendColor()}`}>
             {change > 0 ? "+" : ""}{change.toFixed(2)}%

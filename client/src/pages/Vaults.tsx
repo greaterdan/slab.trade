@@ -240,7 +240,7 @@ export default function Vaults() {
               <h1 className="text-4xl font-bold text-foreground mb-2">Vaults</h1>
               <div className="bg-card/50 border border-border/30 rounded-lg p-4 inline-block">
                 <p className="text-sm text-muted-foreground">Total Value Locked</p>
-                <p className="text-2xl font-bold">{formatCurrency(totalTVL)}</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(totalTVL)}</p>
               </div>
             </div>
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -289,31 +289,31 @@ export default function Vaults() {
 
       {/* Protocol Vaults */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className="text-2xl font-bold mb-6">Protocol Vaults</h2>
+        <h2 className="text-2xl font-bold mb-6 text-foreground">Protocol Vaults</h2>
         <Card className="bg-card/50 border-border/30">
           <Table>
             <TableHeader>
               <TableRow className="border-border/30">
-                <TableHead className="text-muted-foreground">Vault</TableHead>
-                <TableHead className="text-muted-foreground">Leader</TableHead>
-                <TableHead className="text-muted-foreground">APR</TableHead>
-                <TableHead className="text-muted-foreground">TVL</TableHead>
-                <TableHead className="text-muted-foreground">Your Deposit</TableHead>
-                <TableHead className="text-muted-foreground">Age (days)</TableHead>
-                <TableHead className="text-muted-foreground">Snapshot</TableHead>
+                <TableHead className="text-foreground">Vault</TableHead>
+                <TableHead className="text-foreground">Leader</TableHead>
+                <TableHead className="text-foreground">APR</TableHead>
+                <TableHead className="text-foreground">TVL</TableHead>
+                <TableHead className="text-foreground">Your Deposit</TableHead>
+                <TableHead className="text-foreground">Age (days)</TableHead>
+                <TableHead className="text-foreground">Snapshot</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {protocolVaults.map((vault) => (
                 <TableRow key={vault.id} className="border-border/30 hover:bg-muted/20">
-                  <TableCell className="font-medium">{vault.name}</TableCell>
+                  <TableCell className="font-medium text-foreground">{vault.name}</TableCell>
                   <TableCell className="text-muted-foreground font-mono text-sm">{vault.leader}</TableCell>
                   <TableCell>
                     <span className={getAPRColor(vault.apr)}>
                       {formatAPR(vault.apr)}
                     </span>
                   </TableCell>
-                  <TableCell className="font-mono">{formatCurrency(vault.tvl)}</TableCell>
+                  <TableCell className="font-mono text-foreground">{formatCurrency(vault.tvl)}</TableCell>
                   <TableCell className="font-mono text-muted-foreground">
                     {formatCurrency(vault.yourDeposit)}
                   </TableCell>
@@ -328,31 +328,31 @@ export default function Vaults() {
         </Card>
 
         {/* User Vaults */}
-        <h2 className="text-2xl font-bold mb-6 mt-12">User Vaults</h2>
+        <h2 className="text-2xl font-bold mb-6 mt-12 text-foreground">User Vaults</h2>
         <Card className="bg-card/50 border-border/30">
           <Table>
             <TableHeader>
               <TableRow className="border-border/30">
-                <TableHead className="text-muted-foreground">Vault</TableHead>
-                <TableHead className="text-muted-foreground">Leader</TableHead>
-                <TableHead className="text-muted-foreground">APR</TableHead>
-                <TableHead className="text-muted-foreground">TVL</TableHead>
-                <TableHead className="text-muted-foreground">Your Deposit</TableHead>
-                <TableHead className="text-muted-foreground">Age (days)</TableHead>
-                <TableHead className="text-muted-foreground">Snapshot</TableHead>
+                <TableHead className="text-foreground">Vault</TableHead>
+                <TableHead className="text-foreground">Leader</TableHead>
+                <TableHead className="text-foreground">APR</TableHead>
+                <TableHead className="text-foreground">TVL</TableHead>
+                <TableHead className="text-foreground">Your Deposit</TableHead>
+                <TableHead className="text-foreground">Age (days)</TableHead>
+                <TableHead className="text-foreground">Snapshot</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedVaults.filter(vault => vault.type === "user").map((vault) => (
                 <TableRow key={vault.id} className="border-border/30 hover:bg-muted/20">
-                  <TableCell className="font-medium">{vault.name}</TableCell>
+                  <TableCell className="font-medium text-foreground">{vault.name}</TableCell>
                   <TableCell className="text-muted-foreground font-mono text-sm">{vault.leader}</TableCell>
                   <TableCell>
                     <span className={getAPRColor(vault.apr)}>
                       {formatAPR(vault.apr)}
                     </span>
                   </TableCell>
-                  <TableCell className="font-mono">{formatCurrency(vault.tvl)}</TableCell>
+                  <TableCell className="font-mono text-foreground">{formatCurrency(vault.tvl)}</TableCell>
                   <TableCell className="font-mono text-muted-foreground">
                     {formatCurrency(vault.yourDeposit)}
                   </TableCell>
