@@ -85,6 +85,12 @@ export interface Market {
   createdAt: number;
   creatorAddress: string;
   
+  // Social media links
+  website?: string;
+  twitter?: string;
+  telegram?: string;
+  description?: string;
+  
   bondingConfig: {
     curveType: BondingCurveType;
     startPrice: number;

@@ -6,6 +6,11 @@
     "status": "warmup",
     "createdAt": 1729468800000,
     "creatorAddress": "8xKr...9sFd",
+    "imageUrl": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263/logo.png",
+    "website": "https://bonkcoin.com",
+    "twitter": "https://twitter.com/bonkcoin",
+    "telegram": "https://t.me/bonkcoin",
+    "description": "The first dog coin for the people, by the people",
     "bondingConfig": {
       "curveType": "linear",
       "startPrice": 0.00000876,
@@ -54,6 +59,10 @@
     "status": "perps",
     "createdAt": 1729382400000,
     "creatorAddress": "3pLm...2xTa",
+    "imageUrl": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr/logo.png",
+    "website": "https://dogwifhat.com",
+    "twitter": "https://twitter.com/dogwifhat",
+    "description": "What's a dog with a hat? A dogwifhat!",
     "bondingConfig": {
       "curveType": "exponential",
       "startPrice": 0.001,
@@ -102,6 +111,9 @@
     "status": "bonding",
     "createdAt": 1729555200000,
     "creatorAddress": "9qWx...4kNp",
+    "imageUrl": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr/logo.png",
+    "telegram": "https://t.me/myrocoin",
+    "description": "The cutest dog on Solana",
     "bondingConfig": {
       "curveType": "linear",
       "startPrice": 0.0005,
@@ -140,6 +152,58 @@
       "holders": 234,
       "ageHours": 18,
       "graduationProgress": 34
+    }
+  },
+  {
+    "id": "market-popcat",
+    "symbol": "POPCAT",
+    "name": "Popcat",
+    "status": "bonding",
+    "createdAt": 1729641600000,
+    "creatorAddress": "5mKx...7nQp",
+    "imageUrl": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr/logo.png",
+    "website": "https://popcat.com",
+    "twitter": "https://twitter.com/popcat",
+    "telegram": "https://t.me/popcat",
+    "description": "The most memeable cat on Solana",
+    "bondingConfig": {
+      "curveType": "linear",
+      "startPrice": 0.0001,
+      "creatorTax": 2.5,
+      "protocolTax": 1,
+      "seedVaultTax": 1.5
+    },
+    "graduationTriggers": {
+      "minLiquidity": 300000,
+      "minHolders": 300,
+      "minAgeHours": 24
+    },
+    "perpsConfig": {
+      "tickSize": 0.00001,
+      "lotSize": 100,
+      "maxLeverage": 10,
+      "initialMargin": 10,
+      "maintenanceMargin": 5,
+      "priceBandBps": 1500,
+      "fundingK": 0.0002,
+      "warmupHours": 12,
+      "warmupShortLevCap": 1
+    },
+    "fees": {
+      "takerBps": 15,
+      "makerBps": -1,
+      "creatorFeePct": 20,
+      "referrerFeePct": 5
+    },
+    "metrics": {
+      "currentPrice": 0.000234,
+      "priceChange24h": 78.91,
+      "volume24h": 45000,
+      "openInterest": 0,
+      "liquidity": 67000,
+      "holders": 89,
+      "ageHours": 6,
+      "graduationProgress": 12
     }
   }
 ]
