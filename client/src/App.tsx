@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TopBar } from "@/components/layout/TopBar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import Dashboard from "@/pages/Dashboard";
 import Launch from "@/pages/Launch";
 import Market from "@/pages/Market";
@@ -47,18 +49,21 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="flex flex-col h-screen w-full">
-          <TopBar />
-          <main className="flex-1 overflow-auto">
-            <Router />
-          </main>
-          <footer className="h-8 bg-card/80 backdrop-blur-sm border-t border-border flex items-center justify-center text-xs text-muted-foreground px-4">
-            <p>
-              Trading perpetuals involves risk. DYOR. Not financial advice. Alpha software.
-            </p>
-          </footer>
-        </div>
-        <Toaster />
+        <ThemeProvider>
+          <div className="flex flex-col h-screen w-full">
+            <TopBar />
+            <main className="flex-1 overflow-auto pb-16">
+              <Router />
+            </main>
+            <BottomNav />
+            <footer className="h-8 bg-card/80 backdrop-blur-sm border-t border-border flex items-center justify-center text-xs text-muted-foreground px-4">
+              <p>
+                Trading perpetuals involves risk. DYOR. Not financial advice. Alpha software.
+              </p>
+            </footer>
+          </div>
+          <Toaster />
+        </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

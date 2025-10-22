@@ -2,17 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* WARM BEIGE & WHITE THEME - Clean, professional design */
-.dark {
-  --button-outline: rgba(217, 119, 6, .15);
-  --badge-outline: rgba(217, 119, 6, .08);
+/* THEME SYSTEM - Dynamic color variables */
+:root {
+  --button-outline: rgba(59, 130, 246, .15);
+  --badge-outline: rgba(59, 130, 246, .08);
 
   --opaque-button-border-intensity: 8;
 
-  --elevate-1: rgba(26, 24, 22, .02);
-  --elevate-2: rgba(26, 24, 22, .05);
+  --elevate-1: rgba(0, 0, 0, .02);
+  --elevate-2: rgba(0, 0, 0, .05);
 
-  /* Core Neutrals (Warm Beige/White) */
+  /* Default Standard Theme - Warm Beige */
   --background: 43 30% 97%;  /* #FAF8F5 - Soft warm white */
   --foreground: 20 10% 9%;  /* #1A1816 - Almost black, warm tone */
   
@@ -22,9 +22,9 @@
   
   --border: 30 20% 88%;  /* #E8E4DD - Soft beige border */
   
-  /* Primary (Warm Amber/Orange) */
+  /* Primary (Warm Amber) */
   --primary: 28 96% 44%;  /* #D97706 - Warm amber */
-  --primary-foreground: 0 0% 100%;  /* White text on amber */
+  --primary-foreground: 0 0% 100%;  /* White text */
   
   /* Secondary (Teal Green) */
   --secondary: 166 76% 34%;  /* #059669 - Teal green */
@@ -39,8 +39,8 @@
   --destructive-foreground: 0 0% 100%;  /* White text */
   
   /* Muted (Subtle beige) */
-  --muted: 36 24% 94%;  /* #F5F2ED - Subtle beige */
-  --muted-foreground: 20 6% 45%;  /* #6B6662 - Medium gray */
+  --muted: 20 6% 45%;  /* #6B6662 - Medium gray */
+  --muted-foreground: 20 10% 9%;  /* Almost black */
   
   /* Sidebar */
   --sidebar: 0 0% 100%;  /* White sidebar */
@@ -118,6 +118,10 @@
 
   html {
     @apply dark;
+  }
+  
+  .dark {
+    color-scheme: dark;
   }
 
   body {
