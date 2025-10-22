@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, Plus, Copy, Archive, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Plus, Copy, Archive, RefreshCw, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Wallet {
   id: string;
@@ -24,6 +25,7 @@ interface Wallet {
 
 export default function Portfolio() {
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [showArchived, setShowArchived] = useState(false);
   const [visiblePrivateKeys, setVisiblePrivateKeys] = useState<Record<string, string>>({});
   const [newWalletName, setNewWalletName] = useState("");
@@ -151,6 +153,37 @@ export default function Portfolio() {
 
   // Filter wallets
   const displayedWallets = wallets.filter(w => showArchived || w.isArchived === "false");
+
+  // Show authentication required if not logged in
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen p-6 bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <div className="mb-6">
+              <Lock className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Authentication Required</h2>
+              <p className="text-muted-foreground">
+                You need to be logged in to access your portfolio.
+              </p>
+            </div>
+            <Button 
+              onClick={() => {
+                // This will trigger the login modal from the TopBar
+                const loginButton = document.querySelector('[data-testid="button-login"]') as HTMLButtonElement;
+                if (loginButton) {
+                  loginButton.click();
+                }
+              }}
+              className="w-full"
+            >
+              Log In to Continue
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 bg-background">

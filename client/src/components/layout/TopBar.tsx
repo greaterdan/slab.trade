@@ -24,7 +24,6 @@ import { LoginModal } from "@/components/auth/LoginModal";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
-  { icon: Rocket, label: "Launch", path: "/launch" },
   { icon: Compass, label: "Discover", path: "/discover" },
   { icon: Wallet, label: "Portfolio", path: "/portfolio" },
   { icon: User, label: "Creator", path: "/creator" },
