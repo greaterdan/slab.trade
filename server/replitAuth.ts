@@ -1,39 +1,28 @@
-import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
 import passport from "passport";
 import session from "express-session";
-import type { Express, RequestHandler } from "express";
-import memoize from "memoizee";
+import type { Express } from "express";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 // Development mode detection
-const isDevelopment = !process.env.REPLIT_DOMAINS || !process.env.REPL_ID || process.env.REPL_ID === "dev-repl-id";
-
-if (!process.env.REPLIT_DOMAINS) {
-  console.warn("REPLIT_DOMAINS environment variable is not set, using fallback for development");
-  process.env.REPLIT_DOMAINS = "localhost:3000";
-}
-
-if (!process.env.REPL_ID) {
-  console.warn("REPL_ID environment variable is not set, using fallback for development");
-  process.env.REPL_ID = "dev-repl-id";
-}
+const isDevelopment = process.env.NODE_ENV === "development";
 
 if (!process.env.SESSION_SECRET) {
   console.warn("SESSION_SECRET environment variable is not set, using fallback for development");
   process.env.SESSION_SECRET = "dev-session-secret-not-secure";
 }
 
-const getOidcConfig = memoize(
-  async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
-  },
-  { maxAge: 3600 * 1000 }
-);
+// Google OAuth environment variables
+if (!process.env.GOOGLE_CLIENT_ID) {
+  console.warn("GOOGLE_CLIENT_ID environment variable is not set, Google OAuth will not work");
+}
+
+if (!process.env.GOOGLE_CLIENT_SECRET) {
+  console.warn("GOOGLE_CLIENT_SECRET environment variable is not set, Google OAuth will not work");
+}
+
+// Removed Replit OIDC - using Google OAuth instead
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -73,25 +62,7 @@ export function getSession() {
   }
 }
 
-function updateUserSession(
-  user: any,
-  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
-) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
-}
-
-async function upsertUser(claims: any) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
-}
+// Removed Replit-specific user session functions
 
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
@@ -99,29 +70,42 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const config = await getOidcConfig();
+  // Google OAuth Strategy
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(new GoogleStrategy({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.DOMAIN || 'localhost:3000'}/api/auth/google/callback`
+    }, async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Create or update user from Google profile
+        const userData = {
+          id: profile.id,
+          email: profile.emails?.[0]?.value,
+          firstName: profile.name?.givenName,
+          lastName: profile.name?.familyName,
+          profileImageUrl: profile.photos?.[0]?.value,
+        };
 
-  const verify: VerifyFunction = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
-  ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
-  };
+        await storage.upsertUser(userData);
+        
+        const user = {
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          provider: 'google'
+        };
 
-  for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `http://${domain}/api/callback`,
-      },
-      verify
-    );
-    passport.use(strategy);
+        return done(null, user);
+      } catch (error) {
+        console.error("Google OAuth error:", error);
+        return done(error, null);
+      }
+    }));
   }
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
@@ -160,24 +144,29 @@ export async function setupAuth(app: Express) {
         return res.redirect("/");
       });
     } else {
-      const hostname = req.hostname === 'localhost' ? 'localhost:3000' : req.hostname;
-      passport.authenticate(`replitauth:${hostname}`, {
-        scope: ["openid", "email", "profile", "offline_access"],
-      })(req, res, next);
+      // Production: redirect to Google OAuth
+      res.redirect("/api/auth/google");
     }
   });
 
-  app.get("/api/callback", (req, res, next) => {
-    if (isDevelopment) {
-      // In development mode, redirect to home since login is handled in /api/login
-      return res.redirect("/");
-    } else {
-      const hostname = req.hostname === 'localhost' ? 'localhost:3000' : req.hostname;
-      passport.authenticate(`replitauth:${hostname}`, {
-        successReturnToOrRedirect: "/",
-        failureRedirect: "/api/login",
+  // Removed Replit callback - using Google OAuth callback instead
+
+  // Google OAuth routes
+  app.get("/api/auth/google", (req, res, next) => {
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      passport.authenticate("google", {
+        scope: ["profile", "email"]
       })(req, res, next);
+    } else {
+      res.status(500).json({ message: "Google OAuth not configured" });
     }
+  });
+
+  app.get("/api/auth/google/callback", (req, res, next) => {
+    passport.authenticate("google", {
+      successRedirect: "/",
+      failureRedirect: "/login?error=google_auth_failed"
+    })(req, res, next);
   });
 
   app.get("/api/logout", (req, res) => {

@@ -10,6 +10,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
+import { Buffer } from "../lib/bufferPolyfill";
 import {
   findVaultPda,
   findEscrowPda,

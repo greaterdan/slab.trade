@@ -4,6 +4,7 @@
  */
 
 import { PublicKey } from "@solana/web3.js";
+import { Buffer } from "../lib/bufferPolyfill";
 
 // Program IDs from environment
 export const ROUTER_PROGRAM_ID = new PublicKey(

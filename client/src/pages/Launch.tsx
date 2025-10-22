@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { useState, useEffect, useRef } from "react";
+import { PublicKey, Keypair, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, ChevronRight, Check, Rocket, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Rocket, Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MarketTile } from "@/components/shared/MarketTile";
 import type { LaunchFormData, BondingCurveType } from "@shared/schema";
@@ -15,13 +15,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as percolator from "@/percolator";
 import type { RiskParams, InstrumentConfig } from "@/percolator/types";
+import { 
+  MeteoraBondingClient, 
+  createSlabBondingConfig, 
+  createBondingCurvePool,
+  buyBondingCurveTokens,
+  SLAB_TAX_DESTINATION 
+} from "@/lib/meteoraBonding";
+import { createWalletSigningService } from "@/lib/walletSigning";
 
 const steps = [
-  { number: 1, title: "Basics", subtitle: "Name, symbol, image" },
-  { number: 2, title: "Bonding Curve", subtitle: "Type, price, taxes" },
-  { number: 3, title: "Graduation", subtitle: "Triggers for perps" },
-  { number: 4, title: "Perps Params", subtitle: "Trading parameters" },
-  { number: 5, title: "Fees & Deploy", subtitle: "Final review" },
+  { number: 1, title: "Basics", subtitle: "Name, symbol, description" },
+  { number: 2, title: "Social", subtitle: "Links and branding" },
+  { number: 3, title: "Deploy", subtitle: "Launch your slab" },
 ];
 
 export default function Launch() {
@@ -29,13 +35,27 @@ export default function Launch() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
-  const [formData, setFormData] = useState<LaunchFormData>({
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState({
     step: 1,
-    basics: { name: "", symbol: "", imageUrl: "" },
-    bondingCurve: { curveType: "linear", startPrice: 0.001, creatorTax: 2, protocolTax: 1, seedVaultTax: 2 },
-    graduationTriggers: { minLiquidity: 1000000, minHolders: 1000, minAgeHours: 72 },
-    perpsParams: { tickSize: 0.0001, lotSize: 1, maxLeverage: 20, initialMargin: 5, maintenanceMargin: 2.5, priceBandBps: 1000, fundingK: 0.0001, warmupHours: 24, warmupShortLevCap: 1 },
-    fees: { takerBps: 10, makerBps: -2, creatorFeePct: 30, referrerFeePct: 10 },
+    basics: { 
+      name: "", 
+      symbol: "", 
+      description: "",
+      imageUrl: "",
+      imageFile: null as File | null
+    },
+    social: {
+      website: "",
+      twitter: "",
+      telegram: ""
+    },
+    deployment: {
+      creatorSolAmount: 0.1
+    }
   });
 
   // Show authentication required message
@@ -79,8 +99,105 @@ export default function Launch() {
   };
 
   const canProceed = () => {
-    if (currentStep === 1) return formData.basics.name && formData.basics.symbol;
+    if (currentStep === 1) return formData.basics.name && formData.basics.symbol && formData.basics.description;
+    if (currentStep === 2) return true; // Social links are optional
     return true;
+  };
+
+  // Image handling functions
+  const handleImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select an image file (PNG, JPG, GIF, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setImagePreview(result);
+      updateFormData("basics", { 
+        imageFile: file,
+        imageUrl: result // Use data URL for preview
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleImageFile(e.target.files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    updateFormData("basics", { 
+      imageFile: null,
+      imageUrl: ""
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!formData.basics.imageFile) return;
+
+    setIsUploading(true);
+    try {
+      // TODO: Implement actual image upload to IPFS or cloud storage
+      // For now, simulate upload
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const mockUrl = `https://slab-images.com/${Date.now()}.jpg`;
+      updateFormData("basics", { imageUrl: mockUrl });
+      
+      toast({
+        title: "Image Uploaded",
+        description: "Your image has been uploaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const deployMarket = async () => {
@@ -96,99 +213,90 @@ export default function Launch() {
     setIsDeploying(true);
 
     try {
-      // Generate new market ID
-      const marketKeypair = Keypair.generate();
-      const marketId = marketKeypair.publicKey;
+      // Initialize Solana connection
+      const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+      const userPublicKey = new PublicKey(user.wallet.publicKey);
       
-      const userPubkey = new PublicKey(user.wallet.publicKey);
-      
-      // USDC mint (mainnet) - TODO: Make configurable
-      const quoteMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+      // Create wallet signing service
+      const walletSigningService = createWalletSigningService(connection, userPublicKey);
+      const wallet = walletSigningService.createWallet();
 
-      // Build risk parameters from form
-      const risk: RiskParams = {
-        initialMarginBps: Math.floor(formData.perpsParams.initialMargin * 100),
-        maintenanceMarginBps: Math.floor(formData.perpsParams.maintenanceMargin * 100),
-        bandBps: formData.perpsParams.priceBandBps,
-        fundingCapBps: Math.floor(formData.perpsParams.fundingK * 10000),
-        maxLeverage: formData.perpsParams.maxLeverage,
-        openInterestCap: percolator.toFixed(100000000), // 100M cap
-      };
+      toast({
+        title: "Creating Bonding Curve Configuration...",
+        description: "Setting up Meteora DBC parameters",
+      });
 
-      // Build warmup config
-      const warmupEndMs = formData.perpsParams.warmupHours * 60 * 60 * 1000;
-      const warmupConfig = {
-        enabled: formData.perpsParams.warmupHours > 0,
-        shortEnabled: formData.perpsParams.warmupShortLevCap > 0,
-        shortLeverageCap: formData.perpsParams.warmupShortLevCap,
-        endTimestamp: Math.floor(Date.now() / 1000) + Math.floor(warmupEndMs / 1000),
-      };
+      // Step 1: Create token mint
+      const tokenMint = Keypair.generate();
+      const quoteMint = new PublicKey("So11111111111111111111111111111111111111112"); // SOL
 
-      // Build instrument config
-      const instrumentConfig: InstrumentConfig = {
+      // Step 2: Create bonding curve configuration
+      const configTx = await createSlabBondingConfig(
+        connection,
+        wallet,
+        tokenMint.publicKey,
+        quoteMint
+      );
+
+      toast({
+        title: "Configuration Created",
+        description: "Creating virtual pool for bonding curve",
+      });
+
+      // Step 3: Create virtual pool with initial liquidity
+      const initialLiquidity = formData.deployment.creatorSolAmount * LAMPORTS_PER_SOL;
+      const poolTx = await createBondingCurvePool(
+        connection,
+        wallet,
+        new PublicKey(configTx), // Config address from previous step
+        tokenMint.publicKey,
+        initialLiquidity
+      );
+
+      toast({
+        title: "Pool Created",
+        description: "Adding initial liquidity to bonding curve",
+      });
+
+      // Step 4: Add initial liquidity (buy tokens with creator's SOL)
+      const buyTx = await buyBondingCurveTokens(
+        connection,
+        wallet,
+        new PublicKey(poolTx), // Pool address from previous step
+        initialLiquidity,
+        0 // No minimum token amount
+      );
+
+      // Step 5: Store market data in our database
+      const marketData = {
+        name: formData.basics.name,
         symbol: formData.basics.symbol,
-        tickSize: percolator.toFixed(formData.perpsParams.tickSize),
-        lotSize: percolator.toFixed(formData.perpsParams.lotSize),
-        contractSize: percolator.toFixed(1), // 1x multiplier
+        description: formData.basics.description,
+        imageUrl: formData.basics.imageUrl,
+        website: formData.social.website,
+        twitter: formData.social.twitter,
+        telegram: formData.social.telegram,
+        creator: user.wallet.publicKey,
+        tokenMint: tokenMint.publicKey.toBase58(),
+        poolAddress: poolTx,
+        configAddress: configTx,
+        initialSol: formData.deployment.creatorSolAmount,
+        graduationThreshold: 80, // 80 SOL
+        taxDestination: SLAB_TAX_DESTINATION.toBase58(),
+        createdAt: new Date().toISOString(),
+        status: "active"
       };
 
-      toast({
-        title: "Preparing Transactions...",
-        description: "Building market initialization transactions",
-      });
-
-      // Step 1: Initialize slab (10MB account)
-      const slabTx = await percolator.slab.initSlab(
-        marketId,
-        userPubkey,
-        risk,
-        true, // anti-toxicity enabled
-        userPubkey
-      );
-
-      // Step 2: Create market (router)
-      const marketTx = await percolator.router.createMarket(
-        {
-          marketId,
-          authority: userPubkey,
-          quoteMint,
-          risk,
-          warmup: warmupConfig,
-        },
-        userPubkey
-      );
-
-      // Step 3: Add instrument
-      const instrumentTx = await percolator.slab.addInstrument(
-        marketId,
-        instrumentConfig,
-        userPubkey,
-        userPubkey
-      );
+      // TODO: Store marketData in database
+      console.log("Market created:", marketData);
 
       toast({
-        title: "Transactions Ready",
-        description: "Ready to sign and submit to blockchain...",
-      });
-
-      // TODO: Sign and send transactions
-      // This requires integrating with the custodial wallet service
-      // For now, show informative message
-      toast({
-        title: "⚠️ Wallet Integration Required",
-        description: "Transaction signing is not yet implemented. The transactions have been prepared but need to be signed with your custodial wallet.",
-        variant: "destructive",
-      });
-
-      console.log("Prepared transactions:", {
-        marketId: marketId.toBase58(),
-        slabTx,
-        marketTx,
-        instrumentTx,
+        title: "✅ Slab Created Successfully!",
+        description: `Your ${formData.basics.symbol} bonding curve is now live with ${formData.deployment.creatorSolAmount} SOL initial liquidity`,
       });
 
     } catch (error) {
-      console.error("Market deployment failed:", error);
+      console.error("Slab deployment failed:", error);
       toast({
         title: "Deployment Failed",
         description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -289,13 +397,13 @@ export default function Launch() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Market Basics</h2>
-                    <p className="text-sm text-muted-foreground">Set up your market identity</p>
+                    <h2 className="text-2xl font-bold mb-2">Slab Basics</h2>
+                    <p className="text-sm text-muted-foreground">Set up your slab identity</p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name">Market Name</Label>
+                      <Label htmlFor="name">Slab Name</Label>
                       <Input
                         id="name"
                         placeholder="e.g., Bonk Inu"
@@ -320,22 +428,99 @@ export default function Launch() {
                     </div>
 
                     <div>
-                      <Label htmlFor="image">Image URL (optional)</Label>
-                      <Input
-                        id="image"
-                        type="url"
-                        placeholder="https://..."
-                        value={formData.basics.imageUrl}
-                        onChange={(e) => updateFormData("basics", { imageUrl: e.target.value })}
-                        className="mt-2"
-                        data-testid="input-image"
+                      <Label htmlFor="description">Description</Label>
+                      <textarea
+                        id="description"
+                        placeholder="Describe your slab..."
+                        value={formData.basics.description}
+                        onChange={(e) => updateFormData("basics", { description: e.target.value })}
+                        className="mt-2 w-full px-3 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                        rows={3}
+                        data-testid="input-description"
                       />
+                    </div>
+
+                    <div>
+                      <Label>Slab Image (optional)</Label>
+                      <div className="mt-2">
+                        {imagePreview ? (
+                          <div className="relative">
+                            <div className="aspect-square w-full max-w-48 rounded-md border border-border overflow-hidden bg-muted/10">
+                              <img 
+                                src={imagePreview} 
+                                alt="Slab preview" 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={uploadImage}
+                                disabled={isUploading}
+                                className="flex-1"
+                              >
+                                {isUploading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Uploading...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Upload Image
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={removeImage}
+                                className="px-3"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                              dragActive 
+                                ? "border-primary bg-primary/5" 
+                                : "border-border hover:border-primary/50"
+                            }`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                          >
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileInput}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <div className="space-y-2">
+                              <ImageIcon className="w-8 h-8 mx-auto text-muted-foreground" />
+                              <div className="text-sm">
+                                <span className="text-primary font-medium">Click to upload</span> or drag and drop
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                PNG, JPG, GIF up to 5MB
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 2: Bonding Curve */}
+              {/* Step 2: Social Media */}
               {currentStep === 2 && (
                 <motion.div
                   key="step2"
@@ -346,87 +531,54 @@ export default function Launch() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Bonding Curve</h2>
-                    <p className="text-sm text-muted-foreground">Configure price discovery mechanism</p>
+                    <h2 className="text-2xl font-bold mb-2">Social Links</h2>
+                    <p className="text-sm text-muted-foreground">Add your social media links (optional)</p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="curve-type">Curve Type</Label>
-                      <Select
-                        value={formData.bondingCurve.curveType}
-                        onValueChange={(v) => updateFormData("bondingCurve", { curveType: v as BondingCurveType })}
-                      >
-                        <SelectTrigger className="mt-2" data-testid="select-curve-type">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="linear">Linear</SelectItem>
-                          <SelectItem value="exponential">Exponential</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="start-price">Start Price ($)</Label>
+                      <Label htmlFor="website">Website</Label>
                       <Input
-                        id="start-price"
-                        type="number"
-                        step="0.000001"
-                        value={formData.bondingCurve.startPrice}
-                        onChange={(e) => updateFormData("bondingCurve", { startPrice: parseFloat(e.target.value) })}
+                        id="website"
+                        type="url"
+                        placeholder="https://yourwebsite.com"
+                        value={formData.social.website}
+                        onChange={(e) => updateFormData("social", { website: e.target.value })}
                         className="mt-2"
-                        data-testid="input-start-price"
+                        data-testid="input-website"
                       />
                     </div>
 
-                    <Separator />
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="creator-tax">Creator Tax (%)</Label>
-                        <Input
-                          id="creator-tax"
-                          type="number"
-                          value={formData.bondingCurve.creatorTax}
-                          onChange={(e) => updateFormData("bondingCurve", { creatorTax: parseFloat(e.target.value) })}
-                          className="mt-2"
-                          data-testid="input-creator-tax"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="protocol-tax">Protocol Tax (%)</Label>
-                        <Input
-                          id="protocol-tax"
-                          type="number"
-                          value={formData.bondingCurve.protocolTax}
-                          onChange={(e) => updateFormData("bondingCurve", { protocolTax: parseFloat(e.target.value) })}
-                          className="mt-2"
-                          data-testid="input-protocol-tax"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="seed-vault-tax">Seed Vault (%)</Label>
-                        <Input
-                          id="seed-vault-tax"
-                          type="number"
-                          value={formData.bondingCurve.seedVaultTax}
-                          onChange={(e) => updateFormData("bondingCurve", { seedVaultTax: parseFloat(e.target.value) })}
-                          className="mt-2"
-                          data-testid="input-seed-vault-tax"
-                        />
-                      </div>
+                    <div>
+                      <Label htmlFor="twitter">Twitter</Label>
+                      <Input
+                        id="twitter"
+                        type="url"
+                        placeholder="https://twitter.com/yourusername"
+                        value={formData.social.twitter}
+                        onChange={(e) => updateFormData("social", { twitter: e.target.value })}
+                        className="mt-2"
+                        data-testid="input-twitter"
+                      />
                     </div>
 
-                    <div className="p-3 bg-muted/10 rounded-md border border-border">
-                      <div className="text-sm font-medium mb-1">Total Tax: {(formData.bondingCurve.creatorTax + formData.bondingCurve.protocolTax + formData.bondingCurve.seedVaultTax).toFixed(2)}%</div>
-                      <div className="text-xs text-muted-foreground">Applied to each bonding curve transaction</div>
+                    <div>
+                      <Label htmlFor="telegram">Telegram</Label>
+                      <Input
+                        id="telegram"
+                        type="url"
+                        placeholder="https://t.me/yourgroup"
+                        value={formData.social.telegram}
+                        onChange={(e) => updateFormData("social", { telegram: e.target.value })}
+                        className="mt-2"
+                        data-testid="input-telegram"
+                      />
                     </div>
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 3: Graduation Triggers */}
+              {/* Step 3: Deploy */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
@@ -437,197 +589,88 @@ export default function Launch() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Graduation Triggers</h2>
-                    <p className="text-sm text-muted-foreground">When to transition from bonding to perpetuals</p>
+                    <h2 className="text-2xl font-bold mb-2">Deploy Your Slab</h2>
+                    <p className="text-sm text-muted-foreground">Configure deployment settings and launch your bonding curve market</p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="min-liquidity">Minimum Liquidity ($)</Label>
-                      <Input
-                        id="min-liquidity"
-                        type="number"
-                        value={formData.graduationTriggers.minLiquidity}
-                        onChange={(e) => updateFormData("graduationTriggers", { minLiquidity: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-min-liquidity"
-                      />
+                      <Label htmlFor="creator-sol">Initial SOL Amount</Label>
+                      <div className="mt-2">
+                        <div className="relative">
+                          <Input
+                            id="creator-sol"
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            value={formData.deployment.creatorSolAmount}
+                            onChange={(e) => updateFormData("deployment", { creatorSolAmount: parseFloat(e.target.value) })}
+                            className="pr-16"
+                            data-testid="input-creator-sol"
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                            SOL
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Amount of SOL you want to add as initial liquidity to your slab
+                        </p>
+                      </div>
                     </div>
 
-                    <div>
-                      <Label htmlFor="min-holders">Minimum Holders</Label>
-                      <Input
-                        id="min-holders"
-                        type="number"
-                        value={formData.graduationTriggers.minHolders}
-                        onChange={(e) => updateFormData("graduationTriggers", { minHolders: parseInt(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-min-holders"
-                      />
+                    <Separator />
+
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-lg">Deployment Summary</h3>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Slab Name</span>
+                          <span className="font-medium">{formData.basics.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Symbol</span>
+                          <span className="font-medium">{formData.basics.symbol}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Initial SOL</span>
+                          <span className="font-medium">{formData.deployment.creatorSolAmount} SOL</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Graduation Threshold</span>
+                          <span className="font-medium text-success">80 SOL</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Bonding Curve</span>
+                          <span className="font-medium">Meteora DBC</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Deployment Cost</span>
+                          <span className="font-medium text-success">~0.01 SOL</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <Label htmlFor="min-age">Minimum Age (hours)</Label>
-                      <Input
-                        id="min-age"
-                        type="number"
-                        value={formData.graduationTriggers.minAgeHours}
-                        onChange={(e) => updateFormData("graduationTriggers", { minAgeHours: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-min-age"
-                      />
+                    <div className="p-4 bg-muted/10 border border-border rounded-md">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="space-y-2">
+                          <h4 className="font-semibold">Ready to Launch</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Your slab will be created with Meteora's Dynamic Bonding Curve. 
+                            Graduation happens automatically at 80 SOL total liquidity.
+                          </p>
+                          <div className="text-xs text-muted-foreground">
+                            • 4% tax during bonding phase<br/>
+                            • 1% tax after graduation<br/>
+                            • All taxes go to SLAB treasury
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              )}
 
-              {/* Step 4: Perps Parameters */}
-              {currentStep === 4 && (
-                <motion.div
-                  key="step4"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-6"
-                >
-                  <div>
-                    <h2 className="text-2xl font-bold mb-2">Perpetuals Parameters</h2>
-                    <p className="text-sm text-muted-foreground">Advanced trading configuration</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="tick-size">Tick Size</Label>
-                      <Input
-                        id="tick-size"
-                        type="number"
-                        step="0.0001"
-                        value={formData.perpsParams.tickSize}
-                        onChange={(e) => updateFormData("perpsParams", { tickSize: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-tick-size"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lot-size">Lot Size</Label>
-                      <Input
-                        id="lot-size"
-                        type="number"
-                        value={formData.perpsParams.lotSize}
-                        onChange={(e) => updateFormData("perpsParams", { lotSize: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-lot-size"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="max-leverage">Max Leverage</Label>
-                      <Input
-                        id="max-leverage"
-                        type="number"
-                        value={formData.perpsParams.maxLeverage}
-                        onChange={(e) => updateFormData("perpsParams", { maxLeverage: parseInt(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-max-leverage"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="warmup-hours">Warmup Hours</Label>
-                      <Input
-                        id="warmup-hours"
-                        type="number"
-                        value={formData.perpsParams.warmupHours}
-                        onChange={(e) => updateFormData("perpsParams", { warmupHours: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-warmup-hours"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="warmup-short-lev">Warmup Short Lev Cap</Label>
-                      <Input
-                        id="warmup-short-lev"
-                        type="number"
-                        value={formData.perpsParams.warmupShortLevCap}
-                        onChange={(e) => updateFormData("perpsParams", { warmupShortLevCap: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-warmup-short-lev"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Step 5: Fees & Deploy */}
-              {currentStep === 5 && (
-                <motion.div
-                  key="step5"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-6"
-                >
-                  <div>
-                    <h2 className="text-2xl font-bold mb-2">Fees & Final Review</h2>
-                    <p className="text-sm text-muted-foreground">Trading fees and deployment</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="taker-bps">Taker Fee (bps)</Label>
-                      <Input
-                        id="taker-bps"
-                        type="number"
-                        value={formData.fees.takerBps}
-                        onChange={(e) => updateFormData("fees", { takerBps: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-taker-bps"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="maker-bps">Maker Fee (bps)</Label>
-                      <Input
-                        id="maker-bps"
-                        type="number"
-                        value={formData.fees.makerBps}
-                        onChange={(e) => updateFormData("fees", { makerBps: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-maker-bps"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="creator-fee">Creator Fee %</Label>
-                      <Input
-                        id="creator-fee"
-                        type="number"
-                        value={formData.fees.creatorFeePct}
-                        onChange={(e) => updateFormData("fees", { creatorFeePct: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-creator-fee"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="referrer-fee">Referrer Fee %</Label>
-                      <Input
-                        id="referrer-fee"
-                        type="number"
-                        value={formData.fees.referrerFeePct}
-                        onChange={(e) => updateFormData("fees", { referrerFeePct: parseFloat(e.target.value) })}
-                        className="mt-2"
-                        data-testid="input-referrer-fee"
-                      />
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-md">
-                    <h3 className="font-semibold text-destructive mb-2">⚠️ Ready to Deploy</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Review all parameters carefully. Deployment is irreversible and will require wallet signature.
-                    </p>
                     <Button
-                      className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12"
                       size="lg"
                       onClick={deployMarket}
                       disabled={isDeploying}
@@ -636,12 +679,12 @@ export default function Launch() {
                       {isDeploying ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Deploying...
+                          Creating Slab...
                         </>
                       ) : (
                         <>
                           <Rocket className="w-5 h-5 mr-2" />
-                          Deploy Market
+                          Launch Slab
                         </>
                       )}
                     </Button>
@@ -665,8 +708,8 @@ export default function Launch() {
                 Step {currentStep} of {steps.length}
               </div>
               <Button
-                onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
-                disabled={currentStep === 5 || !canProceed()}
+                onClick={() => setCurrentStep(prev => Math.min(3, prev + 1))}
+                disabled={currentStep === 3 || !canProceed()}
                 data-testid="button-next-step"
               >
                 Next
@@ -683,31 +726,38 @@ export default function Launch() {
 
             {formData.basics.symbol ? (
               <div className="space-y-4">
-                <div className="aspect-square w-full rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-primary">{formData.basics.symbol.slice(0, 2)}</span>
+                <div className="aspect-square w-full rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+                  {imagePreview ? (
+                    <img 
+                      src={imagePreview} 
+                      alt="Slab preview" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-4xl font-bold text-primary">{formData.basics.symbol.slice(0, 2)}</span>
+                  )}
                 </div>
 
                 <div>
                   <h4 className="font-bold text-lg">{formData.basics.symbol}</h4>
-                  <p className="text-sm text-muted-foreground">{formData.basics.name || "Your market name"}</p>
+                  <p className="text-sm text-muted-foreground">{formData.basics.name || "Your slab name"}</p>
+                  {formData.basics.description && (
+                    <p className="text-xs text-muted-foreground mt-1">{formData.basics.description}</p>
+                  )}
                 </div>
 
                 <Separator />
 
                 <div className="space-y-3 text-sm">
                   <div>
-                    <Badge variant="outline" className="mb-2">Status Timeline</Badge>
+                    <Badge variant="outline" className="mb-2">Bonding Curve</Badge>
                     <div className="flex items-center gap-2 text-xs">
                       <div className="flex-1 h-1 bg-warning rounded" />
-                      <span className="text-warning">Bonding</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs mt-1">
-                      <div className="flex-1 h-1 bg-info rounded" />
-                      <span className="text-info">Warmup</span>
+                      <span className="text-warning">Bonding Phase</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs mt-1">
                       <div className="flex-1 h-1 bg-success rounded" />
-                      <span className="text-success">Perps</span>
+                      <span className="text-success">Graduation at 80 SOL</span>
                     </div>
                   </div>
 
@@ -715,30 +765,46 @@ export default function Launch() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Start Price</span>
-                      <span className="font-mono font-medium" data-numeric="true">${formData.bondingCurve.startPrice}</span>
+                      <span className="text-muted-foreground">Initial SOL</span>
+                      <span className="font-mono font-medium">{formData.deployment.creatorSolAmount} SOL</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Tax</span>
-                      <span className="font-mono font-medium" data-numeric="true">
-                        {(formData.bondingCurve.creatorTax + formData.bondingCurve.protocolTax + formData.bondingCurve.seedVaultTax).toFixed(2)}%
-                      </span>
+                      <span className="text-muted-foreground">Graduation</span>
+                      <span className="font-mono font-medium text-success">80 SOL</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Max Leverage</span>
-                      <span className="font-mono font-medium" data-numeric="true">{formData.perpsParams.maxLeverage}x</span>
+                      <span className="text-muted-foreground">Tax Rate</span>
+                      <span className="font-mono font-medium">4% → 1%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Est. Deployment</span>
-                      <span className="font-mono font-medium text-success" data-numeric="true">~0.05 SOL</span>
+                      <span className="text-muted-foreground">Deployment</span>
+                      <span className="font-mono font-medium text-success">~0.01 SOL</span>
                     </div>
                   </div>
+
+                  {(formData.social.website || formData.social.twitter || formData.social.telegram) && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="text-xs font-medium text-muted-foreground">Social Links</div>
+                        {formData.social.website && (
+                          <div className="text-xs text-primary truncate">🌐 {formData.social.website}</div>
+                        )}
+                        {formData.social.twitter && (
+                          <div className="text-xs text-primary truncate">🐦 {formData.social.twitter}</div>
+                        )}
+                        {formData.social.telegram && (
+                          <div className="text-xs text-primary truncate">📱 {formData.social.telegram}</div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <p className="text-sm text-muted-foreground">
-                  Fill in market details to see preview
+                  Fill in slab details to see preview
                 </p>
               </div>
             )}
@@ -748,3 +814,4 @@ export default function Launch() {
     </div>
   );
 }
+

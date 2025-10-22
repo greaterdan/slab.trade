@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { WalletService } from "./walletService";
+import { signTransaction, getWalletBalance, transferSol } from "./walletSigning";
 import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, sendAndConfirmTransaction } from "@solana/web3.js";
 
 // Solana connection (devnet for now)
@@ -346,6 +347,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exporting private key:", error);
       res.status(500).json({ message: "Failed to export private key" });
+    }
+  });
+
+  // Wallet signing routes
+  app.post("/api/wallet/sign-transaction", isAuthenticated, async (req: any, res) => {
+    try {
+      const { transaction, publicKey } = req.body;
+      
+      if (!transaction || !publicKey) {
+        return res.status(400).json({ error: "Missing transaction or publicKey" });
+      }
+
+      const signedTransaction = await signTransaction(publicKey, transaction);
+      res.json({ signedTransaction });
+    } catch (error) {
+      console.error("Transaction signing error:", error);
+      res.status(500).json({ error: "Failed to sign transaction" });
+    }
+  });
+
+  app.get("/api/wallet/balance/:publicKey", isAuthenticated, async (req: any, res) => {
+    try {
+      const { publicKey } = req.params;
+      const balance = await getWalletBalance(publicKey);
+      res.json({ balance });
+    } catch (error) {
+      console.error("Balance fetch error:", error);
+      res.status(500).json({ error: "Failed to get balance" });
+    }
+  });
+
+  app.post("/api/wallet/transfer", isAuthenticated, async (req: any, res) => {
+    try {
+      const { fromPublicKey, toPublicKey, amount } = req.body;
+      
+      if (!fromPublicKey || !toPublicKey || !amount) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const signature = await transferSol(fromPublicKey, toPublicKey, amount);
+      res.json({ signature });
+    } catch (error) {
+      console.error("Transfer error:", error);
+      res.status(500).json({ error: "Failed to transfer SOL" });
     }
   });
 

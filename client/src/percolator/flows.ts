@@ -4,6 +4,7 @@
  */
 
 import { PublicKey, Transaction } from "@solana/web3.js";
+import { Buffer } from "../lib/bufferPolyfill";
 import * as router from "./router";
 import * as slab from "./slab";
 import {
