@@ -24,19 +24,14 @@ function Router() {
       <Route path="/creator" component={Creator} />
       <Route path="/portfolio" component={Portfolio} />
       <Route path="/markets" component={Discover} />
-      <Route path="/docs">
+      <Route path="/rewards">
         {() => (
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
-            <h1 className="text-3xl font-bold mb-4">Documentation</h1>
+            <h1 className="text-3xl font-bold mb-4">Rewards</h1>
             <p className="text-muted-foreground mb-6">Coming soon...</p>
-            <a
-              href="https://docs.slab.markets"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              External docs →
-            </a>
+            <div className="text-primary">
+              🎁 Rewards system under development
+            </div>
           </div>
         )}
       </Route>

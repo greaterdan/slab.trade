@@ -60,6 +60,24 @@ export function BottomNav() {
   const [showWalletSelector, setShowWalletSelector] = useState(false);
   const [showWalletTracker, setShowWalletTracker] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("stable");
+  const [pnlPosition, setPnlPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [activeTab, setActiveTab] = useState<"all" | "manager" | "trades">("all");
+  const [newWalletAddress, setNewWalletAddress] = useState("");
+
+  // Add body class when wallet tracker is open
+  useEffect(() => {
+    if (showWalletTracker) {
+      document.body.classList.add('wallet-tracker-open');
+    } else {
+      document.body.classList.remove('wallet-tracker-open');
+    }
+    
+    return () => {
+      document.body.classList.remove('wallet-tracker-open');
+    };
+  }, [showWalletTracker]);
 
   const [pnlData, setPnlData] = useState<PnLData>({
     totalPnL: 1250.50,
@@ -123,6 +141,40 @@ export function BottomNav() {
     return change >= 0 ? "text-green-400" : "text-red-400";
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setPnlPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border">
@@ -142,12 +194,6 @@ export function BottomNav() {
               <span className="text-xs">Wallet</span>
             </button>
             
-            <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-              <span className="text-xs">X</span>
-            </button>
             
             <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Compass className="w-4 h-4" />
@@ -200,15 +246,15 @@ export function BottomNav() {
               <MessageCircle className="w-4 h-4" />
             </button>
             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-            </button>
-            <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <FileText className="w-4 h-4" />
             </button>
             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="w-4 h-4" />
+            </button>
+            <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -218,18 +264,25 @@ export function BottomNav() {
       <AnimatePresence>
         {showPnL && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed z-50 cursor-move"
+            style={{
+              left: pnlPosition.x || window.innerWidth / 2 - 160,
+              top: pnlPosition.y || window.innerHeight / 2 - 150,
+              transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+              transition: isDragging ? 'none' : 'transform 0.2s ease'
+            }}
+            onMouseDown={handleMouseDown}
           >
-            <Card className="p-4 w-80 bg-card border shadow-lg">
+            <Card className="p-4 w-80 bg-amber-900/90 border border-amber-700/50 shadow-2xl backdrop-blur-sm">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">Portfolio PnL</h3>
+                  <h3 className="font-semibold text-sm text-amber-100">Portfolio PnL</h3>
                   <button 
                     onClick={() => setShowPnL(false)}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-amber-300 hover:text-amber-100 transition-colors"
                   >
                     ×
                   </button>
@@ -237,13 +290,13 @@ export function BottomNav() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-muted-foreground">Total PnL</p>
+                    <p className="text-xs text-amber-200/70">Total PnL</p>
                     <p className={`text-lg font-mono ${pnlData.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {pnlData.totalPnL >= 0 ? '+' : ''}${pnlData.totalPnL.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">24h PnL</p>
+                    <p className="text-xs text-amber-200/70">24h PnL</p>
                     <p className={`text-lg font-mono ${pnlData.dayPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {pnlData.dayPnL >= 0 ? '+' : ''}${pnlData.dayPnL.toFixed(2)}
                     </p>
@@ -251,12 +304,12 @@ export function BottomNav() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Positions</p>
+                  <p className="text-xs text-amber-200/70">Positions</p>
                   {pnlData.positions.map((position, index) => (
                     <div key={index} className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{position.symbol}</span>
+                      <span className="font-medium text-amber-100">{position.symbol}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-amber-200/70">
                           {position.size.toLocaleString()}
                         </span>
                         <span className={`font-mono ${position.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -317,104 +370,173 @@ export function BottomNav() {
       {/* Wallet Tracker Sidebar */}
       <AnimatePresence>
         {showWalletTracker && (
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed left-0 top-0 h-full w-1/4 bg-card border-r border-border z-50 overflow-y-auto"
-          >
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">Wallet Tracker</h2>
-                  <button 
-                    onClick={() => setShowWalletTracker(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                {/* Navigation Bar */}
-                <div className="flex items-center gap-4 mb-6 p-2 bg-muted/50 rounded-lg">
-                  <button className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium">
-                    <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
-                      <div className="w-2 h-2 bg-black rounded-sm"></div>
-                    </div>
-                    All
-                  </button>
-                  
-                  <span className="text-sm text-muted-foreground">Manager</span>
-                  
-                  <button className="flex items-center gap-2 px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium relative">
-                    Trades
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full"></div>
-                  </button>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground relative">
-                    <span>Monitor</span>
-                    <div className="flex gap-1">
-                      <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                      <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                      <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full"></div>
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed left-0 top-16 bottom-16 w-1/4 bg-card/95 backdrop-blur-sm border-r border-border/50 shadow-2xl z-30 overflow-hidden rounded-r-lg"
+            >
+              {/* Navigation Bar - Top */}
+              <div className="sticky top-0 bg-card/80 backdrop-blur-sm border-b border-border/30 p-4 z-10 rounded-tr-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setActiveTab("all")}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === "all" 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "bg-muted/50 text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <div className="w-3 h-3 bg-white rounded-sm flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-black rounded-sm"></div>
+                      </div>
+                      All
+                    </button>
+                    
+                    <button 
+                      onClick={() => setActiveTab("manager")}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === "manager" 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "bg-muted/50 text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      Manager
+                    </button>
+                    
+                    <button 
+                      onClick={() => setActiveTab("trades")}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
+                        activeTab === "trades" 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "bg-muted/50 text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      Trades
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full"></div>
+                    </button>
                   </div>
                   
-                  <div className="flex items-center gap-3 ml-auto">
-                    <button className="p-1 text-muted-foreground hover:text-foreground">
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                       <Settings className="w-4 h-4" />
                     </button>
-                    <button className="p-1 text-muted-foreground hover:text-foreground">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                       </svg>
                     </button>
+                    <button 
+                      onClick={() => setShowWalletTracker(false)}
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-4">
-                  {walletTrackerData.map((wallet) => (
-                    <Card key={wallet.id} className="p-3">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-sm">{wallet.name}</p>
-                            <p className="text-xs text-muted-foreground">{wallet.address}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-mono">{wallet.totalValue}</p>
-                            <p className={`text-xs ${wallet.pnl.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                              {wallet.pnl}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <p className="text-xs text-muted-foreground">Recent Trades</p>
-                          {wallet.recentTrades.map((trade, index) => (
-                            <div key={index} className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-2">
-                                <span className={`px-1.5 py-0.5 rounded text-xs ${
-                                  trade.action === 'Bought' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                }`}>
-                                  {trade.action}
-                                </span>
-                                <span className="font-medium">{trade.token}</span>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-mono">{trade.amount}</p>
-                                <p className="text-muted-foreground">{trade.price}</p>
-                              </div>
+              <div className="p-3 h-full overflow-y-auto bg-gradient-to-b from-transparent to-card/20">
+                {activeTab === "all" && (
+                  <div className="space-y-1.5">
+                    {walletTrackerData.map((wallet) => (
+                      <Card key={wallet.id} className="p-2 bg-card/50 border-border/30 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-xs">{wallet.name}</p>
+                              <p className="text-[10px] text-muted-foreground">{wallet.address}</p>
                             </div>
-                          ))}
+                            <div className="text-right">
+                              <p className="text-xs font-mono">{wallet.totalValue}</p>
+                              <p className={`text-[10px] ${wallet.pnl.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                                {wallet.pnl}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-[10px] text-muted-foreground">Recent Trades</p>
+                            {wallet.recentTrades.map((trade, index) => (
+                              <div key={index} className="flex items-center justify-between text-[10px]">
+                                <div className="flex items-center gap-1">
+                                  <span className={`px-1 py-0.5 rounded text-[9px] ${
+                                    trade.action === 'Bought' 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  }`}>
+                                    {trade.action}
+                                  </span>
+                                  <span className="font-medium">{trade.token}</span>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-mono text-[9px]">{trade.amount}</p>
+                                  <p className="text-muted-foreground text-[9px]">{trade.price}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {activeTab === "manager" && (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-muted/10 border border-border/20 rounded-lg shadow-sm">
+                      <h3 className="text-sm font-medium mb-2">Add New Wallet</h3>
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Enter wallet address..."
+                          value={newWalletAddress}
+                          onChange={(e) => setNewWalletAddress(e.target.value)}
+                          className="w-full px-2 py-1 text-xs bg-background border border-border rounded"
+                        />
+                        <button 
+                          onClick={() => {
+                            if (newWalletAddress.trim()) {
+                              // Add wallet logic here
+                              setNewWalletAddress("");
+                            }
+                          }}
+                          className="w-full px-3 py-1 bg-primary text-primary-foreground rounded text-xs hover:bg-primary/90"
+                        >
+                          Add Wallet
+                        </button>
                       </div>
-                    </Card>
-                  ))}
-                </div>
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <h3 className="text-sm font-medium">Tracked Wallets</h3>
+                      {walletTrackerData.map((wallet) => (
+                        <Card key={wallet.id} className="p-2 bg-card/50 border-border/30 shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-xs">{wallet.name}</p>
+                              <p className="text-[10px] text-muted-foreground">{wallet.address}</p>
+                            </div>
+                            <button className="text-red-400 hover:text-red-300 text-xs">
+                              Remove
+                            </button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "trades" && (
+                  <div className="space-y-1.5">
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">Live trades will appear here</p>
+                      <p className="text-xs text-muted-foreground mt-1">Coming soon...</p>
+                    </div>
+                  </div>
+                )}
               </div>
           </motion.div>
         )}

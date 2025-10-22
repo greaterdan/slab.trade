@@ -215,4 +215,15 @@
   .border-info {
     border-color: hsl(var(--info));
   }
+
+  /* Wallet tracker content compression */
+  .wallet-tracker-open main {
+    margin-left: 25%; /* 1/4 of screen width */
+    transition: margin-left 0.3s ease;
+  }
+  
+  .wallet-tracker-open .main-content {
+    margin-left: 25%;
+    transition: margin-left 0.3s ease;
+  }
 }

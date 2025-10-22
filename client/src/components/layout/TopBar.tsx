@@ -1,4 +1,4 @@
-import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, FileText, Menu, LogOut, Key, Copy, Download, Upload, RefreshCw } from "lucide-react";
+import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, Gift, Menu, LogOut, Key, Copy, Download, Upload, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ const navItems = [
   { icon: Compass, label: "Discover", path: "/discover" },
   { icon: Wallet, label: "Portfolio", path: "/portfolio" },
   { icon: User, label: "Creator", path: "/creator" },
-  { icon: FileText, label: "Docs", path: "/docs" },
+  { icon: Gift, label: "Rewards", path: "/rewards" },
 ];
 
 export function TopBar() {
@@ -257,14 +257,17 @@ export function TopBar() {
 
       {/* Right Section */}
       <div className="flex items-center gap-2">
-        {/* Network Indicator */}
-        <div
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-transparent border border-primary/30 text-xs"
-          data-testid="badge-network"
+        {/* Launch Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
+          onClick={() => navigate("/launch")}
+          data-testid="button-launch"
         >
-          <div className="w-1.5 h-1.5 bg-primary animate-pulse" />
-          <span className="text-primary font-mono">SOLANA</span>
-        </div>
+          <Rocket className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline text-xs">LAUNCH</span>
+        </Button>
 
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative border border-transparent hover:border-primary/20" data-testid="button-notifications">
