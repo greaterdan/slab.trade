@@ -157,82 +157,79 @@ export default function Portfolio() {
   // Show authentication required if not logged in
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen p-6 bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <div className="mb-6">
-              <Lock className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Authentication Required</h2>
-              <p className="text-muted-foreground">
-                You need to be logged in to access your portfolio.
-              </p>
-            </div>
-            <Button 
-              onClick={() => {
-                // This will trigger the login modal from the TopBar
-                const loginButton = document.querySelector('[data-testid="button-login"]') as HTMLButtonElement;
-                if (loginButton) {
-                  loginButton.click();
-                }
-              }}
-              className="w-full"
-            >
-              Log In to Continue
-            </Button>
-          </CardContent>
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <Card className="max-w-md w-full p-8 text-center">
+          <Lock className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h1 className="text-2xl font-mono mb-2 text-foreground">Authentication Required</h1>
+          <p className="text-muted-foreground mb-6">
+            You need to be logged in to access your portfolio.
+          </p>
+          <Button 
+            onClick={() => {
+              // This will trigger the login modal from the TopBar
+              const loginButton = document.querySelector('[data-testid="button-login"]') as HTMLButtonElement;
+              if (loginButton) {
+                loginButton.click();
+              }
+            }}
+            className="w-full"
+            data-testid="button-login-portfolio"
+          >
+            Log In to Continue
+          </Button>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 bg-background">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-mono mb-2" data-testid="heading-portfolio">Portfolio</h1>
-          <p className="text-muted-foreground">Manage your wallets and positions</p>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold mb-2" data-testid="heading-portfolio">Portfolio</h1>
+        <p className="text-muted-foreground">Manage your wallets and positions</p>
+      </div>
 
-        <Tabs defaultValue="wallets" className="w-full">
-          <TabsList className="mb-6" data-testid="tabs-portfolio">
-            <TabsTrigger value="spot" data-testid="tab-spot">Spot</TabsTrigger>
-            <TabsTrigger value="wallets" data-testid="tab-wallets">Wallets</TabsTrigger>
-            <TabsTrigger value="perpetuals" data-testid="tab-perpetuals">Perpetuals</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="wallets" className="w-full">
+        <TabsList className="mb-6" data-testid="tabs-portfolio">
+          <TabsTrigger value="spot" data-testid="tab-spot">Spot</TabsTrigger>
+          <TabsTrigger value="wallets" data-testid="tab-wallets">Wallets</TabsTrigger>
+          <TabsTrigger value="perpetuals" data-testid="tab-perpetuals">Perpetuals</TabsTrigger>
+        </TabsList>
 
-          {/* Spot Tab */}
-          <TabsContent value="spot" data-testid="content-spot">
-            <Card>
-              <CardHeader>
-                <CardTitle>Spot Balances</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-muted-foreground">
-                  Total SOL Balance: {wallets.reduce((sum, w) => sum + parseFloat(w.balance || "0"), 0).toFixed(4)} SOL
-                </div>
-                <Separator className="my-4" />
-                <div className="space-y-2">
-                  {displayedWallets.map((wallet) => (
-                    <div key={wallet.id} className="flex items-center justify-between p-3 rounded-md bg-card/50 border">
-                      <div>
-                        <div className="font-medium">{wallet.name}</div>
-                        <div className="text-sm text-muted-foreground font-mono">{wallet.publicKey.slice(0, 8)}...{wallet.publicKey.slice(-8)}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono" data-numeric="true">{parseFloat(wallet.balance || "0").toFixed(4)} SOL</div>
-                      </div>
+        {/* Spot Tab */}
+        <TabsContent value="spot" data-testid="content-spot">
+          <Card className="border-card-border bg-card">
+            <CardHeader>
+              <CardTitle>Spot Balances</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-muted-foreground">
+                Total SOL Balance: {wallets.reduce((sum, w) => sum + parseFloat(w.balance || "0"), 0).toFixed(4)} SOL
+              </div>
+              <Separator className="my-4" />
+              <div className="space-y-2">
+                {displayedWallets.map((wallet) => (
+                  <div key={wallet.id} className="flex items-center justify-between p-3 rounded-md bg-card/50 border">
+                    <div>
+                      <div className="font-medium">{wallet.name}</div>
+                      <div className="text-sm text-muted-foreground font-mono">{wallet.publicKey.slice(0, 8)}...{wallet.publicKey.slice(-8)}</div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    <div className="text-right">
+                      <div className="font-mono" data-numeric="true">{parseFloat(wallet.balance || "0").toFixed(4)} SOL</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Wallets Tab */}
-          <TabsContent value="wallets" data-testid="content-wallets">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <CardTitle>Your Wallets</CardTitle>
+        {/* Wallets Tab */}
+        <TabsContent value="wallets" data-testid="content-wallets">
+          <Card className="border-card-border bg-card">
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <CardTitle>Your Wallets</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -399,21 +396,20 @@ export default function Portfolio() {
             </Card>
           </TabsContent>
 
-          {/* Perpetuals Tab */}
-          <TabsContent value="perpetuals" data-testid="content-perpetuals">
-            <Card>
-              <CardHeader>
-                <CardTitle>Open Positions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  No open positions
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+        {/* Perpetuals Tab */}
+        <TabsContent value="perpetuals" data-testid="content-perpetuals">
+          <Card className="border-card-border bg-card">
+            <CardHeader>
+              <CardTitle>Open Positions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                No open positions
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

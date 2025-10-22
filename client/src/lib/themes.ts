@@ -1,4 +1,4 @@
-export type Theme = 'standard' | 'ocean' | 'forest' | 'sunset';
+export type Theme = 'standard' | 'ocean' | 'forest' | 'graphite';
 
 export interface ThemeConfig {
   name: string;
@@ -43,12 +43,12 @@ export const themes: Record<Theme, ThemeConfig> = {
       primary: '188 94% 43%', // cyan-500
       secondary: '188 85% 35%', // cyan-600
       accent: '199 89% 48%', // sky-500
-      background: '200 100% 22%', // sky-900
-      card: '200 100% 28%', // sky-800
-      border: '200 100% 32%', // sky-700
-      text: '204 100% 97%', // sky-50
-      muted: '199 89% 70%', // sky-300
-      success: '188 94% 60%', // cyan-400
+      background: '200 40% 92%', // softer blue-gray background
+      card: '200 20% 98%', // very light blue-white cards
+      border: '200 30% 85%', // light blue border
+      text: '200 50% 15%', // dark blue-gray text
+      muted: '200 20% 60%', // medium blue-gray
+      success: '142 76% 36%', // green-500
       warning: '38 92% 50%', // amber-500
       destructive: '0 84% 60%', // red-500
     }
@@ -60,28 +60,28 @@ export const themes: Record<Theme, ThemeConfig> = {
       primary: '142 76% 36%', // emerald-500
       secondary: '142 76% 28%', // emerald-600
       accent: '142 76% 50%', // emerald-400
-      background: '142 100% 15%', // emerald-900
-      card: '142 100% 18%', // emerald-800
-      border: '142 100% 22%', // emerald-700
-      text: '138 100% 97%', // emerald-50
-      muted: '142 76% 70%', // emerald-300
+      background: '120 25% 92%', // softer green-gray background
+      card: '120 15% 98%', // very light green-white cards
+      border: '120 20% 85%', // light green border
+      text: '120 30% 15%', // dark green-gray text
+      muted: '120 15% 60%', // medium green-gray
       success: '142 76% 36%', // green-500
       warning: '45 93% 47%', // yellow-500
       destructive: '0 84% 60%', // red-500
     }
   },
-  sunset: {
-    name: 'Sunset',
-    description: 'Warm orange sunset theme',
+  graphite: {
+    name: 'Graphite',
+    description: 'Dark graphite theme',
     colors: {
-      primary: '25 95% 53%', // orange-500
-      secondary: '25 95% 45%', // orange-600
-      accent: '25 95% 65%', // orange-400
-      background: '25 100% 25%', // orange-900
-      card: '25 100% 30%', // orange-800
-      border: '25 100% 38%', // orange-700
-      text: '25 100% 97%', // orange-50
-      muted: '25 95% 85%', // orange-200
+      primary: '28 96% 44%', // warm amber (same as standard)
+      secondary: '166 76% 34%', // teal green
+      accent: '258 90% 58%', // purple
+      background: '0 0% 6%', // very dark graphite background
+      card: '0 0% 10%', // dark graphite cards
+      border: '0 0% 18%', // medium graphite border
+      text: '0 0% 98%', // very light gray text for better contrast
+      muted: '0 0% 70%', // lighter gray for better readability
       success: '142 76% 36%', // green-500
       warning: '38 92% 50%', // amber-500
       destructive: '0 84% 60%', // red-500
@@ -119,6 +119,7 @@ export function applyTheme(theme: Theme) {
   root.style.setProperty('--border', themeConfig.colors.border);
   root.style.setProperty('--foreground', themeConfig.colors.text);
   root.style.setProperty('--muted', themeConfig.colors.muted);
+  root.style.setProperty('--muted-foreground', themeConfig.colors.muted);
   root.style.setProperty('--success', themeConfig.colors.success);
   root.style.setProperty('--warning', themeConfig.colors.warning);
   root.style.setProperty('--destructive', themeConfig.colors.destructive);

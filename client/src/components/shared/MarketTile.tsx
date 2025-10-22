@@ -52,7 +52,7 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
                 )}
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-sm">{market.symbol}</h3>
+                <h3 className="font-bold text-sm text-foreground">{market.symbol}</h3>
                 <p className="text-xs text-muted-foreground">{market.name}</p>
                 {/* Social media icons */}
                 <div className="flex items-center gap-1 mt-1">
@@ -61,14 +61,14 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
                       href={market.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-primary transition-colors p-1 rounded hover:bg-primary/10 border border-gray-200 hover:border-primary/30"
+                      className="text-muted-foreground hover:text-primary transition-colors p-1 rounded hover:bg-primary/10 border border-border hover:border-primary/30"
                       onClick={(e) => e.stopPropagation()}
                       title="Website"
                     >
                       <Globe className="w-4 h-4" />
                     </a>
                   ) : (
-                    <div className="text-gray-300 p-1 border border-gray-100 rounded">
+                    <div className="text-muted-foreground/50 p-1 border border-border/50 rounded">
                       <Globe className="w-4 h-4" />
                     </div>
                   )}
@@ -77,14 +77,14 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
                       href={market.twitter} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-blue-400 transition-colors p-1 rounded hover:bg-blue-400/10 border border-gray-200 hover:border-blue-400/30"
+                      className="text-muted-foreground hover:text-blue-400 transition-colors p-1 rounded hover:bg-blue-400/10 border border-border hover:border-blue-400/30"
                       onClick={(e) => e.stopPropagation()}
                       title="Twitter"
                     >
                       <Twitter className="w-4 h-4" />
                     </a>
                   ) : (
-                    <div className="text-gray-300 p-1 border border-gray-100 rounded">
+                    <div className="text-muted-foreground/50 p-1 border border-border/50 rounded">
                       <Twitter className="w-4 h-4" />
                     </div>
                   )}
@@ -93,14 +93,14 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
                       href={market.telegram} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-blue-500 transition-colors p-1 rounded hover:bg-blue-500/10 border border-gray-200 hover:border-blue-500/30"
+                      className="text-muted-foreground hover:text-blue-500 transition-colors p-1 rounded hover:bg-blue-500/10 border border-border hover:border-blue-500/30"
                       onClick={(e) => e.stopPropagation()}
                       title="Telegram"
                     >
                       <MessageCircle className="w-4 h-4" />
                     </a>
                   ) : (
-                    <div className="text-gray-300 p-1 border border-gray-100 rounded">
+                    <div className="text-muted-foreground/50 p-1 border border-border/50 rounded">
                       <MessageCircle className="w-4 h-4" />
                     </div>
                   )}
@@ -112,7 +112,7 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
 
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-xl font-bold font-mono" data-numeric="true">
+              <div className="text-xl font-bold font-mono text-foreground" data-numeric="true">
                 {formatNumber(market.metrics.currentPrice)}
               </div>
               <div className={`flex items-center gap-1 text-sm font-medium ${isPriceUp ? "text-success" : "text-destructive"}`}>
@@ -129,7 +129,7 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
                 <Droplet className="w-3 h-3" />
                 <span>Vol 24h</span>
               </div>
-              <div className="text-xs font-medium font-mono" data-numeric="true">
+              <div className="text-xs font-medium font-mono text-foreground" data-numeric="true">
                 {formatNumber(market.metrics.volume24h)}
               </div>
             </div>
@@ -138,7 +138,7 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
                 <TrendingUp className="w-3 h-3" />
                 <span>OI</span>
               </div>
-              <div className="text-xs font-medium font-mono" data-numeric="true">
+              <div className="text-xs font-medium font-mono text-foreground" data-numeric="true">
                 {formatNumber(market.metrics.openInterest)}
               </div>
             </div>
@@ -147,7 +147,7 @@ export function MarketTile({ market, className = "" }: MarketTileProps) {
                 <Users className="w-3 h-3" />
                 <span>Holders</span>
               </div>
-              <div className="text-xs font-medium font-mono" data-numeric="true">
+              <div className="text-xs font-medium font-mono text-foreground" data-numeric="true">
                 {market.metrics.holders}
               </div>
             </div>

@@ -118,15 +118,15 @@ export function ThemeSwitcher() {
                           <div className="flex gap-1">
                             <div 
                               className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: themeConfig.colors.primary }}
+                              style={{ backgroundColor: `hsl(${themeConfig.colors.primary})` }}
                             />
                             <div 
                               className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: themeConfig.colors.secondary }}
+                              style={{ backgroundColor: `hsl(${themeConfig.colors.secondary})` }}
                             />
                             <div 
                               className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: themeConfig.colors.accent }}
+                              style={{ backgroundColor: `hsl(${themeConfig.colors.accent})` }}
                             />
                           </div>
                           

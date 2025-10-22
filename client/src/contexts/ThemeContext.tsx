@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(theme);
   };
 
-  const availableThemes: Theme[] = ['standard', 'ocean', 'forest', 'sunset'];
+  const availableThemes: Theme[] = ['standard', 'ocean', 'forest', 'graphite'];
 
   return (
     <ThemeContext.Provider value={{ currentTheme, setTheme, availableThemes }}>
