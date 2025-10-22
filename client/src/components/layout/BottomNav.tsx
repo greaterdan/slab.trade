@@ -61,7 +61,10 @@ export function BottomNav() {
   const [showWalletTracker, setShowWalletTracker] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("stable");
   const [pnlPosition, setPnlPosition] = useState({ x: 0, y: 0 });
+  const [pnlSize, setPnlSize] = useState({ width: 320, height: 200 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState<"all" | "manager" | "trades">("all");
   const [newWalletAddress, setNewWalletAddress] = useState("");
@@ -150,21 +153,39 @@ export function BottomNav() {
     });
   };
 
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: pnlSize.width,
+      height: pnlSize.height
+    });
+  };
+
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging) {
       setPnlPosition({
         x: e.clientX - dragOffset.x,
         y: e.clientY - dragOffset.y
       });
+    } else if (isResizing) {
+      const deltaX = e.clientX - resizeStart.x;
+      const deltaY = e.clientY - resizeStart.y;
+      const newWidth = Math.max(250, Math.min(600, resizeStart.width + deltaX));
+      const newHeight = Math.max(200, Math.min(500, resizeStart.height + deltaY));
+      setPnlSize({ width: newWidth, height: newHeight });
     }
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    setIsResizing(false);
   };
 
   useEffect(() => {
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -173,7 +194,7 @@ export function BottomNav() {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, isResizing, dragOffset, pnlPosition]);
 
   return (
     <>
@@ -202,7 +223,13 @@ export function BottomNav() {
             
             <button 
               className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setShowPnL(!showPnL)}
+              onClick={() => {
+                setShowPnL(!showPnL);
+                if (!showPnL) {
+                  // Reset to original size when opening
+                  setPnlSize({ width: 320, height: 200 });
+                }
+              }}
             >
               <BarChart3 className="w-4 h-4" />
               <span className="text-xs">PnL</span>
@@ -271,12 +298,14 @@ export function BottomNav() {
             style={{
               left: pnlPosition.x || window.innerWidth / 2 - 160,
               top: pnlPosition.y || window.innerHeight / 2 - 150,
+              width: pnlSize.width,
+              height: pnlSize.height,
               transform: isDragging ? 'scale(1.05)' : 'scale(1)',
               transition: isDragging ? 'none' : 'transform 0.2s ease'
             }}
             onMouseDown={handleMouseDown}
           >
-            <Card className="p-4 w-80 bg-amber-900/90 border border-amber-700/50 shadow-2xl backdrop-blur-sm">
+            <Card className="p-4 h-full bg-amber-900/90 border border-amber-700/50 shadow-2xl backdrop-blur-sm relative">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm text-amber-100">Portfolio PnL</h3>
@@ -320,6 +349,15 @@ export function BottomNav() {
                   ))}
                 </div>
               </div>
+              
+              {/* Resize Handle */}
+              <div
+                className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize opacity-50 hover:opacity-100 transition-opacity"
+                onMouseDown={handleResizeMouseDown}
+                style={{
+                  background: 'linear-gradient(-45deg, transparent 30%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.5) 70%, transparent 70%)'
+                }}
+              />
             </Card>
           </motion.div>
         )}

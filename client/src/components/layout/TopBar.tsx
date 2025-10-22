@@ -1,4 +1,4 @@
-import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, Gift, Menu, LogOut, Key, Copy, Download, Upload, RefreshCw } from "lucide-react";
+import { Search, Bell, Wallet, Home, Rocket, Compass, TrendingUp, User, Gift, Menu, LogOut, Key, Copy, Download, Upload, RefreshCw, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ import { LoginModal } from "@/components/auth/LoginModal";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
+  { icon: Shield, label: "Vaults", path: "/vaults" },
   { icon: Compass, label: "Discover", path: "/discover" },
   { icon: Wallet, label: "Portfolio", path: "/portfolio" },
   { icon: User, label: "Creator", path: "/creator" },

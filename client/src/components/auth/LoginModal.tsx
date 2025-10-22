@@ -98,7 +98,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
         <div className="space-y-3">
           {/* Google Login */}
-          <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={handleGoogleLogin}>
+          <Card className="hover:bg-primary/10 transition-colors cursor-pointer" onClick={handleGoogleLogin}>
             <CardHeader className="pb-2">
               <div className="flex items-center space-x-3">
                 <div className="p-1.5 bg-red-100 dark:bg-red-900/20 rounded-lg">
@@ -137,7 +137,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </Card>
 
           {/* Solana Wallet */}
-          <Card className={`hover:bg-accent/50 transition-colors cursor-pointer ${!walletAvailable ? 'opacity-50' : ''}`} onClick={walletAvailable ? handleSolanaWallet : undefined}>
+          <Card className={`hover:bg-primary/10 transition-colors cursor-pointer ${!walletAvailable ? 'opacity-50' : ''}`} onClick={walletAvailable ? handleSolanaWallet : undefined}>
             <CardHeader className="pb-2">
               <div className="flex items-center space-x-3">
                 <div className="p-1.5 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
@@ -186,7 +186,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </Card>
 
           {/* Email Login */}
-          <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={handleEmailLogin}>
+          <Card className="hover:bg-primary/10 transition-colors cursor-pointer" onClick={handleEmailLogin}>
             <CardHeader className="pb-2">
               <div className="flex items-center space-x-3">
                 <div className="p-1.5 bg-blue-100 dark:bg-blue-900/20 rounded-lg">

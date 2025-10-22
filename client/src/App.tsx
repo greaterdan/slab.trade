@@ -7,6 +7,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Dashboard from "@/pages/Dashboard";
+import Vaults from "@/pages/Vaults";
 import Launch from "@/pages/Launch";
 import Market from "@/pages/Market";
 import Discover from "@/pages/Discover";
@@ -18,6 +19,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/vaults" component={Vaults} />
       <Route path="/launch" component={Launch} />
       <Route path="/market/:symbol" component={Market} />
       <Route path="/discover" component={Discover} />
